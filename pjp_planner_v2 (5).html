@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PJP Planner — KSBCL</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:"Segoe UI",system-ui,sans-serif}
+body{display:flex;height:100vh;overflow:hidden;background:#f0f2f5;font-size:14px;color:#1f2937}
+/* ─── SIDEBAR ─── */
+#sb{width:240px;background:#0f2744;display:flex;flex-direction:column;flex-shrink:0;z-index:10}
+#logo{padding:18px 16px;border-bottom:1px solid #1e3a5f}
+#logo h1{color:#fff;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+#logo p{color:#6899be;font-size:11px;margin-top:3px}
+nav{flex:1;padding:8px 0;overflow-y:auto}
+.ni{display:flex;align-items:center;gap:10px;padding:11px 16px;color:#90b4cf;cursor:pointer;transition:.15s;border-left:3px solid transparent;font-size:13px;font-weight:500}
+.ni:hover{background:#1a3454;color:#fff}
+.ni.active{background:#1a3454;color:#fff;border-left-color:#3b82f6}
+.ng{padding:12px 16px 4px;font-size:10px;letter-spacing:1px;color:#3d6080;text-transform:uppercase;font-weight:600}
+#sb-footer{padding:12px 16px;border-top:1px solid #1e3a5f}
+/* ─── MAIN ─── */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e5e7eb;flex-shrink:0;gap:8px;flex-wrap:wrap}
+.topbar h2{font-size:16px;font-weight:600;color:#1f2937}
+.ta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+/* ─── BUTTONS ─── */
+.btn{padding:7px 14px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:500;transition:.15s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.bp{background:#2563eb;color:#fff}.bp:hover{background:#1d4ed8}
+.bs{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}.bs:hover{background:#e5e7eb}
+.bd{background:#ef4444;color:#fff}.bd:hover{background:#dc2626}
+.bg{background:#16a34a;color:#fff}.bg:hover{background:#15803d}
+.bw{background:#f59e0b;color:#fff}.bw:hover{background:#d97706}
+.sm{padding:5px 10px;font-size:12px}
+/* ─── TABS ─── */
+.tc{display:none;flex-direction:column;height:100%;overflow:hidden}
+.tc.active{display:flex}
+/* ─── MODALS ─── */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:none;align-items:center;justify-content:center}
+.mo.open{display:flex}
+.md{background:#fff;border-radius:12px;padding:24px;min-width:460px;max-width:660px;max-height:88vh;overflow-y:auto;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.md h3{font-size:16px;font-weight:700;margin-bottom:16px;color:#111827}
+.fr{margin-bottom:12px}
+.fr label{display:block;font-size:12px;font-weight:600;color:#4b5563;margin-bottom:4px}
+.fr input,.fr select,.fr textarea{width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;outline:none;transition:.15s}
+.fr input:focus,.fr select:focus,.fr textarea:focus{border-color:#3b82f6;box-shadow:0 0 0 3px #dbeafe}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mf{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid #f1f5f9}
+.cx{position:absolute;top:14px;right:14px;background:none;border:none;font-size:22px;cursor:pointer;color:#9ca3af;line-height:1}.cx:hover{color:#1f2937}
+/* ─── TABLES ─── */
+table{width:100%;border-collapse:collapse}
+th{background:#f8fafc;padding:9px 12px;text-align:left;font-size:12px;font-weight:600;color:#4b5563;border-bottom:1px solid #e5e7eb;white-space:nowrap}
+td{padding:8px 12px;border-bottom:1px solid #f1f5f9;font-size:13px;color:#374151}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f8fafc}
+.badge{display:inline-flex;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
+.tw{margin:14px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;flex:1;overflow:auto}
+/* ─── MISC ─── */
+.uz{border:2px dashed #d1d5db;border-radius:8px;padding:28px;text-align:center;cursor:pointer;transition:.15s;background:#fafbfc}
+.uz:hover,.uz.drag-active{border-color:#3b82f6;background:#eff6ff}
+.toast{position:fixed;bottom:20px;right:20px;background:#1f2937;color:#fff;padding:12px 20px;border-radius:8px;font-size:13px;z-index:99999;opacity:0;transition:.3s;transform:translateY(10px);pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.success{background:#15803d}.toast.error{background:#dc2626}
+/* ─── MAP ─── */
+.di{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);background:#0f2744;color:#fff;padding:8px 18px;border-radius:20px;font-size:12px;z-index:1000;display:none;font-weight:500;box-shadow:0 4px 12px rgba(0,0,0,.3);pointer-events:none;max-width:80%;text-align:center;line-height:1.5}
+/* ─── PLANNER ─── */
+.pg{display:grid;grid-template-columns:170px repeat(6,1fr);background:#fff;border:1px solid #e5e7eb;border-radius:8px;min-width:900px}
+.phd{padding:10px 8px;font-size:12px;font-weight:600;color:#4b5563;background:#f8fafc;border-right:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;text-align:center}
+.pep{padding:10px 8px;border-right:1px solid #e5e7eb;background:#fafbfc;border-bottom:1px solid #f1f5f9;display:flex;flex-direction:column;justify-content:center;min-height:90px}
+.pep b{font-size:12px;color:#111827}
+.pep span{font-size:10px;color:#6b7280;margin-top:2px}
+.pce{padding:6px;border-right:1px solid #f1f5f9;border-bottom:1px solid #f1f5f9;min-height:90px;position:relative;transition:.1s}
+.pce:hover{background:#f0f7ff}
+.pce.dov{background:#dbeafe!important;border:2px dashed #3b82f6}
+.chip{background:#eff6ff;color:#1e40af;border-radius:4px;padding:3px 6px;font-size:10px;margin-bottom:2px;display:flex;align-items:center;gap:4px;line-height:1.4}
+.chip .cn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip-del{cursor:pointer;color:#93c5fd;flex-shrink:0;font-size:15px;line-height:1}.chip-del:hover{color:#dc2626}
+.pi{padding:7px 10px;background:#fff;border:1px solid #e5e7eb;border-radius:6px;margin-bottom:5px;cursor:grab;font-size:12px;transition:.1s;user-select:none}
+.pi:hover{background:#eff6ff;border-color:#93c5fd}.pi:active{cursor:grabbing;opacity:.7}
+.add-btn{position:absolute;bottom:4px;right:4px;width:22px;height:22px;background:#3b82f6;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;opacity:0;transition:.15s;line-height:1;font-weight:300}
+.pce:hover .add-btn{opacity:1}
+/* ─── STATS ─── */
+.stat{background:#fff;border-radius:8px;padding:14px 16px;border:1px solid #e5e7eb}
+.stat .lbl{font-size:11px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.stat .val{font-size:26px;font-weight:700;color:#1f2937;margin-top:3px}
+.stat .sub{font-size:11px;color:#9ca3af;margin-top:2px}
+/* ─── TEAM ─── */
+.tcard{background:#fff;border-radius:8px;border:1px solid #e5e7eb;padding:16px;position:relative}
+.tav{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;margin-bottom:10px;color:#fff}
+/* ─── SKU ─── */
+.sku-tag{background:#f3f4f6;border:1px solid #e5e7eb;border-radius:14px;padding:3px 10px;font-size:12px;display:inline-flex;align-items:center;gap:5px;margin:2px}
+.sku-del{cursor:pointer;color:#9ca3af;font-size:13px}.sku-del:hover{color:#dc2626}
+/* ─── REPORT CARD ─── */
+.rc{background:#fff;border-radius:8px;border:1px solid #e5e7eb;padding:18px;margin-bottom:14px}
+.rc h3{font-size:14px;font-weight:600;margin-bottom:14px;color:#111827}
+/* ─── SEARCH BAR ─── */
+.sb{padding:12px 14px 0;display:flex;gap:8px;flex-wrap:wrap}
+.sb input,.sb select{padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;outline:none;background:#fff}
+.sb input:focus{border-color:#3b82f6}
+.sb input{flex:1;min-width:160px}
+/* ─── INPUT ROW ─── */
+.ir{display:flex;gap:6px;margin-bottom:8px}
+.ir input{flex:1;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;outline:none}
+.ir input:focus{border-color:#3b82f6}
+/* print */
+@media print{#sb{display:none}#main{margin:0}#tab-report{display:block!important;height:auto;overflow:visible}.topbar{display:none}.tc{display:block!important}}
+</style>
+</head>
+<body>
+
+<!-- ════════════ SIDEBAR ════════════ -->
+<div id="sb">
+  <div id="logo">
+    <h1>🗺 PJP Planner</h1>
+    <p>KSBCL Route Management</p>
+  </div>
+  <nav>
+    <div class="ng">Overview</div>
+    <div class="ni active" data-tab="map" onclick="showTab('map')">🗺 Map View</div>
+    <div class="ni" data-tab="planner" onclick="showTab('planner')">📋 PJP Planner</div>
+    <div class="ng">Management</div>
+    <div class="ni" data-tab="outlets" onclick="showTab('outlets')">🏪 Outlets</div>
+    <div class="ni" data-tab="team" onclick="showTab('team')">👥 Team</div>
+    <div class="ni" data-tab="sku" onclick="showTab('sku')">📦 SKU Manager</div>
+    <div class="ng">Tools</div>
+    <div class="ni" data-tab="import" onclick="showTab('import')">📥 Bulk Import</div>
+    <div class="ni" data-tab="report" onclick="showTab('report')">📊 Reports</div>
+  </nav>
+  <div id="sb-footer">
+    <div style="font-size:11px;color:#3d6080">Total Outlets</div>
+    <div style="font-size:22px;font-weight:700;color:#fff" id="total-count">0</div>
+    <div style="font-size:11px;color:#4d7a9a;margin-top:4px" id="sb-pjp-status"></div>
+  </div>
+</div>
+
+<!-- ════════════ MAIN ════════════ -->
+<div id="main">
+
+<!-- ── MAP TAB ── -->
+<div class="tc active" id="tab-map">
+  <div class="topbar">
+    <h2>🗺 Map View</h2>
+    <div class="ta">
+      <select id="mb" onchange="applyMapF()" style="padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px"><option value="">All BMs</option></select>
+      <select id="mbt" onchange="applyMapF()" style="padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px"><option value="">All Beats</option></select>
+      <select id="mcb" onchange="applyMapF()" style="padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px">
+        <option value="beat">Color by Beat</option>
+        <option value="bm">Color by BM</option>
+        <option value="ec">Color by EC</option>
+      </select>
+      <button class="btn bp sm" onclick="openM('m-add')">+ Add Outlet</button>
+      <button class="btn bs sm" id="dist-mode-btn" onclick="toggleDistMode()" style="border:2px solid #d1d5db">📏 Distance Mode</button>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;overflow:hidden;position:relative">
+    <!-- MAP fills all space -->
+    <div id="map" style="flex:1;z-index:0;min-width:0"></div>
+
+    <!-- hint only, no legend -->
+    <div id="dist-hint" style="position:absolute;top:10px;right:10px;z-index:1000;background:rgba(255,255,255,0.92);border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.12);padding:8px;font-size:10px;color:#6b7280;line-height:1.8;pointer-events:none">
+      <div>Hover → outlet name</div>
+      <div>Click → outlet details</div>
+      <div>Right-click → delete</div>
+    </div>
+
+    <!-- DISTANCE PANEL — slides in from left as a sidebar -->
+    <div id="dist-panel" style="display:none;width:260px;flex-shrink:0;background:#0f2744;z-index:500;display:none;flex-direction:column;overflow:hidden;border-left:1px solid #1e3a5f">
+      <div style="padding:14px 14px 10px;border-bottom:1px solid #1e3a5f;display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:13px;font-weight:700;color:#fff">📏 Distance Check</span>
+        <span id="dist-sel-count" style="font-size:10px;background:#1e3a5f;padding:2px 8px;border-radius:10px;color:#90b4cf">0 selected</span>
+      </div>
+      <div style="padding:10px 14px;border-bottom:1px solid #1e3a5f">
+        <div style="font-size:10px;color:#4d7a9a;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Selected Outlets</div>
+        <div id="dist-selected-list" style="font-size:11px;color:#90b4cf;min-height:24px">Click outlets on map to select...</div>
+      </div>
+      <div style="padding:10px 14px;flex:1;overflow-y:auto">
+        <div style="font-size:10px;color:#4d7a9a;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Distances</div>
+        <div id="dist-results" style="font-size:11px"></div>
+      </div>
+      <div style="padding:10px 14px;border-top:1px solid #1e3a5f">
+        <button onclick="clearDistSel()" style="width:100%;padding:7px;background:#1e3a5f;border:none;border-radius:6px;color:#90b4cf;font-size:12px;cursor:pointer;transition:.15s" onmouseover="this.style.background='#2563eb';this.style.color='#fff'" onmouseout="this.style.background='#1e3a5f';this.style.color='#90b4cf'">✕ Clear Selection</button>
+      </div>
+    </div>
+
+    <div class="di" id="dist-info"></div>
+  </div>
+</div>
+
+<!-- ── PLANNER TAB ── -->
+<div class="tc" id="tab-planner">
+  <div class="topbar">
+    <h2>📋 PJP Planner</h2>
+    <div class="ta">
+      <select id="pl-bm" onchange="renderPlanner()" style="padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px"><option value="">All BMs</option></select>
+      <select id="pl-ec" onchange="renderPlanner()" style="padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px"><option value="">All ECs</option></select>
+      <select id="pl-wk" onchange="renderPlanner()" style="padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px">
+        <option value="1">Week 1</option><option value="2">Week 2</option>
+        <option value="3">Week 3</option><option value="4">Week 4</option>
+      </select>
+      <button class="btn bg sm" onclick="finalizePJP()">✓ Finalize PJP</button>
+      <button class="btn bs sm" onclick="clearPlanner()">✕ Clear Week</button>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;overflow:hidden">
+    <!-- Pool -->
+    <div style="width:220px;flex-shrink:0;border-right:1px solid #e5e7eb;background:#fff;display:flex;flex-direction:column;padding:10px;gap:8px">
+      <div style="font-size:12px;font-weight:600;color:#4b5563">Outlet Pool <span id="pool-cnt" style="color:#9ca3af;font-weight:400"></span></div>
+      <input id="pool-q" type="text" placeholder="Search..." oninput="renderPool()" style="padding:6px 8px;border:1px solid #d1d5db;border-radius:5px;font-size:12px;outline:none">
+      <select id="pool-beat" onchange="renderPool()" style="padding:5px 8px;border:1px solid #d1d5db;border-radius:5px;font-size:12px;outline:none"><option value="">All Beats</option></select>
+      <div style="font-size:10px;color:#9ca3af">Drag to a day cell →</div>
+      <div id="pool" style="flex:1;overflow-y:auto"></div>
+    </div>
+    <!-- Grid -->
+    <div style="flex:1;overflow:auto;padding:14px">
+      <div id="pjp-grid-wrap"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── OUTLETS TAB ── -->
+<div class="tc" id="tab-outlets">
+  <div class="topbar">
+    <h2>🏪 Outlet Management</h2>
+    <div class="ta">
+      <button class="btn bp sm" onclick="openM('m-add')">+ Add Outlet</button>
+      <button class="btn bs sm" onclick="exportOutlets()">↓ Export CSV</button>
+    </div>
+  </div>
+  <div class="sb">
+    <input id="o-q" type="text" placeholder="Search by name or code..." oninput="renderOT()">
+    <select id="o-bm" onchange="renderOT()"><option value="">All BMs</option></select>
+    <select id="o-beat" onchange="renderOT()"><option value="">All Beats</option></select>
+    <select id="o-ec" onchange="renderOT()"><option value="">All ECs</option></select>
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Code</th><th>Outlet Name</th><th>Beat</th><th>BM</th><th>Exec Champion</th><th>Depot</th><th style="width:120px">Actions</th></tr></thead>
+      <tbody id="o-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── TEAM TAB ── -->
+<div class="tc" id="tab-team">
+  <div class="topbar">
+    <h2>👥 Team Management</h2>
+    <div class="ta"><button class="btn bp sm" onclick="openM('m-emp')">+ Add Employee</button></div>
+  </div>
+  <div style="padding:12px 16px 0;display:flex;gap:6px">
+    <button class="btn bs sm" id="tf-all" onclick="setTF('all')">All</button>
+    <button class="btn bs sm" id="tf-bm" onclick="setTF('bm')">BM</button>
+    <button class="btn bs sm" id="tf-ec" onclick="setTF('ec')">Exec Champion</button>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;padding:14px;overflow-y:auto;flex:1" id="team-grid"></div>
+</div>
+
+<!-- ── SKU TAB ── -->
+<div class="tc" id="tab-sku">
+  <div class="topbar">
+    <h2>📦 SKU Manager</h2>
+    <div class="ta"><button class="btn bs sm" onclick="exportSKU()">↓ Export SKU List</button></div>
+  </div>
+  <div class="sb">
+    <input id="sku-q" type="text" placeholder="Search outlet name or code..." oninput="renderSKUT()" style="max-width:360px">
+    <select id="sku-beat" onchange="renderSKUT()"><option value="">All Beats</option></select>
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Code</th><th>Outlet Name</th><th>Beat</th><th>SKUs Assigned</th><th>Action</th></tr></thead>
+      <tbody id="sku-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── IMPORT TAB ── -->
+<div class="tc" id="tab-import">
+  <div class="topbar"><h2>📥 Bulk Import</h2></div>
+  <div style="padding:20px;overflow-auto;flex:1;display:grid;grid-template-columns:1fr 1fr;gap:20px;align-content:start">
+    <div class="rc">
+      <h3>📥 Import Outlets (CSV / Excel)</h3>
+      <p style="font-size:12px;color:#6b7280;margin-bottom:10px">Required columns: <code>Outlet code, Outlet name, Latitude, Longitude, Beat, BM Mapped, Execution Champion Name, Depot</code></p>
+      <div class="uz" id="uz-outlet" ondragover="event.preventDefault();this.classList.add('drag-active')" ondragleave="this.classList.remove('drag-active')" ondrop="dropFile(event,'outlet')" onclick="document.getElementById('of').click()">
+        <div style="font-size:32px">📁</div>
+        <p style="color:#6b7280;font-size:13px;margin-top:8px">Click or drag & drop .csv / .xlsx / .xls</p>
+      </div>
+      <input type="file" id="of" accept=".csv,.xlsx,.xls" style="display:none" onchange="importO(event)">
+      <div id="o-imp-res" style="margin-top:10px;font-size:13px"></div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btn bs sm" onclick="dlOTemplate()">↓ Template</button>
+      </div>
+    </div>
+    <div class="rc">
+      <h3>👥 Import Employees (CSV / Excel)</h3>
+      <p style="font-size:12px;color:#6b7280;margin-bottom:10px">Required columns: <code>Name, Role (BM or EC), BM Mapped</code></p>
+      <div class="uz" id="uz-emp" ondragover="event.preventDefault();this.classList.add('drag-active')" ondragleave="this.classList.remove('drag-active')" ondrop="dropFile(event,'emp')" onclick="document.getElementById('ef').click()">
+        <div style="font-size:32px">📁</div>
+        <p style="color:#6b7280;font-size:13px;margin-top:8px">Click or drag & drop .csv / .xlsx / .xls</p>
+      </div>
+      <input type="file" id="ef" accept=".csv,.xlsx,.xls" style="display:none" onchange="importE(event)">
+      <div id="e-imp-res" style="margin-top:10px;font-size:13px"></div>
+      <div style="margin-top:10px">
+        <button class="btn bs sm" onclick="dlETemplate()">↓ Template</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── REPORT TAB ── -->
+<div class="tc" id="tab-report">
+  <div class="topbar">
+    <h2>📊 Reports & Export</h2>
+    <div class="ta">
+      <button class="btn bp" onclick="dlPJP()">↓ PJP Report (Excel)</button>
+      <button class="btn bs" onclick="exportOutlets()">↓ Outlet List (CSV)</button>
+      <button class="btn bs" onclick="window.print()">🖨 Print</button>
+    </div>
+  </div>
+  <div style="padding:16px;overflow-auto;flex:1">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
+      <div class="stat"><div class="lbl">Total Outlets</div><div class="val" id="r-o">0</div><div class="sub">All beats</div></div>
+      <div class="stat"><div class="lbl">BMs</div><div class="val" id="r-b">0</div><div class="sub">Business Managers</div></div>
+      <div class="stat"><div class="lbl">Exec Champions</div><div class="val" id="r-e">0</div><div class="sub">Field reps</div></div>
+      <div class="stat"><div class="lbl">Beats / Zones</div><div class="val" id="r-bt">0</div><div class="sub">Route zones</div></div>
+    </div>
+    <div id="pjp-sections"></div>
+    <div class="rc">
+      <h3>📍 Beat-wise Summary</h3>
+      <table><thead><tr><th>Beat</th><th>Outlets</th><th>BMs</th><th>ECs</th></tr></thead><tbody id="beat-tbody"></tbody></table>
+    </div>
+    <div class="rc">
+      <h3>👤 BM-wise Summary</h3>
+      <table><thead><tr><th>BM</th><th>Outlets</th><th>Beats</th><th>Exec Champions</th></tr></thead><tbody id="bm-tbody"></tbody></table>
+    </div>
+    <div class="rc">
+      <h3>⭐ EC-wise Summary</h3>
+      <table><thead><tr><th>Exec Champion</th><th>BM</th><th>Outlets</th><th>Beats</th><th>PJP Days Planned</th></tr></thead><tbody id="ec-tbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- ══════════ MODALS ══════════ -->
+
+<!-- ADD / EDIT OUTLET -->
+<div class="mo" id="m-add">
+  <div class="md">
+    <button class="cx" onclick="closeM('m-add')">×</button>
+    <h3 id="m-add-title">Add New Outlet</h3>
+    <div class="fg">
+      <div class="fr"><label>Outlet Code *</label><input id="nc" placeholder="e.g. 99001"></div>
+      <div class="fr"><label>Outlet Name *</label><input id="nn" placeholder="99001-Shop Name"></div>
+      <div class="fr"><label>Beat *</label><input id="nbt" list="bl" placeholder="Select or type beat"><datalist id="bl"></datalist></div>
+      <div class="fr"><label>BM Mapped *</label><select id="nbm"><option value="">Select BM</option></select></div>
+      <div class="fr"><label>Exec Champion *</label><select id="nec"><option value="">Select EC</option></select></div>
+      <div class="fr"><label>Depot</label><input id="ndp" placeholder="e.g. KSBCL - WHITE FIELD"></div>
+      <div class="fr"><label>Latitude *</label><input id="nlt" type="number" step="any" placeholder="12.9716"></div>
+      <div class="fr"><label>Longitude *</label><input id="nlg" type="number" step="any" placeholder="77.5946"></div>
+    </div>
+    <div class="mf">
+      <button class="btn bs" onclick="closeM('m-add')">Cancel</button>
+      <button class="btn bp" id="m-add-btn" onclick="saveOutlet()">Add Outlet</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD EMPLOYEE -->
+<div class="mo" id="m-emp">
+  <div class="md">
+    <button class="cx" onclick="closeM('m-emp')">×</button>
+    <h3>Add Employee</h3>
+    <div class="fr"><label>Full Name *</label><input id="en" placeholder="Employee full name"></div>
+    <div class="fr"><label>Role *</label>
+      <select id="er" onchange="document.getElementById('ebr').style.display=this.value==='ec'?'block':'none'">
+        <option value="ec">Execution Champion</option>
+        <option value="bm">Business Manager</option>
+      </select>
+    </div>
+    <div class="fr" id="ebr"><label>Reports to BM</label>
+      <select id="ebs"><option value="">Select BM</option></select>
+    </div>
+    <div class="mf">
+      <button class="btn bs" onclick="closeM('m-emp')">Cancel</button>
+      <button class="btn bp" onclick="addEmployee()">Add Employee</button>
+    </div>
+  </div>
+</div>
+
+<!-- CELL PICKER -->
+<div class="mo" id="m-cell">
+  <div class="md" style="min-width:520px">
+    <button class="cx" onclick="closeM('m-cell')">×</button>
+    <h3 id="m-cell-title">Add Outlet to Day</h3>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <input id="cq" type="text" placeholder="Search outlet name or code..." oninput="renderCL()" style="flex:1;padding:8px;border:1px solid #d1d5db;border-radius:6px;outline:none;font-size:13px">
+      <select id="cq-beat" onchange="renderCL()" style="padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px"><option value="">All Beats</option></select>
+    </div>
+    <div id="cl" style="max-height:360px;overflow-y:auto;border:1px solid #f1f5f9;border-radius:6px"></div>
+    <div class="mf" style="align-items:center"><span id="cl-sel-count" style="font-size:12px;color:#6b7280;margin-right:auto">0 selected</span><button class="btn bs" onclick="closeM('m-cell')">Cancel</button><button class="btn bp" onclick="addSelectedToCell()">✓ Add Selected</button></div>
+  </div>
+</div>
+
+<!-- SKU MODAL -->
+<div class="mo" id="m-sku">
+  <div class="md">
+    <button class="cx" onclick="closeM('m-sku')">×</button>
+    <h3>📦 SKUs — <span id="sm-name" style="font-weight:500;color:#374151"></span></h3>
+    <div class="ir">
+      <input id="si" placeholder="Enter SKU name or code (e.g. KINGFISHER 650ML)" onkeydown="if(event.key==='Enter')addSKU()">
+      <button class="btn bp sm" onclick="addSKU()">Add SKU</button>
+    </div>
+    <div id="skl" style="display:flex;flex-wrap:wrap;gap:4px;min-height:40px;padding:4px 0"></div>
+    <div class="mf"><button class="btn bg" onclick="closeM('m-sku')">Done</button></div>
+  </div>
+</div>
+
+<!-- OUTLET DETAIL / EDIT MODAL -->
+<div class="mo" id="m-det">
+  <div class="md" style="min-width:520px">
+    <button class="cx" onclick="closeM('m-det')">×</button>
+    <h3 id="dt">Outlet Details</h3>
+    <div id="db"></div>
+    <div class="mf">
+      <button class="btn bd sm" onclick="delOutletDetail()">🗑 Delete Outlet</button>
+      <button class="btn bw sm" onclick="editOutletDetail()">✏ Edit Outlet</button>
+      <button class="btn bs" onclick="closeM('m-det')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  DATA & CONSTANTS
+// ══════════════════════════════════════════════════════════════
+const RAW=[{"BM Mapped":"Manjunatha S","Outlet code":"43654","Outlet name":"43654-PRADEEP N","Depot":"KSBCL - WHITE FIELD","Latitude":12.95643389,"Longitude":77.73100264,"Execution Champion Name":"Madhu T R","Beat":"Whitefield"},{"BM Mapped":"KP Pruthviraj","Outlet code":"40003","Outlet name":"40003 - S-A-Suresh","Depot":"KSBCL - WHITE FIELD","Latitude":13.0031416,"Longitude":77.72347335,"Execution Champion Name":"Srikantha M R","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"42992","Outlet name":"42992-SRINIVASA REDDY S K","Depot":"KSBCL - WHITE FIELD","Latitude":13.00730476,"Longitude":77.74424572,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"10396","Outlet name":"10396 - A.Ravichandar","Depot":"KSBCL - WHITE FIELD","Latitude":13.00673046,"Longitude":77.7474751,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"16630","Outlet name":"16630 - D V Venkateshppa","Depot":"KSBCL - WHITE FIELD","Latitude":13.00430457,"Longitude":77.70975586,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"17856","Outlet name":"17856 - Suresh T","Depot":"KSBCL - WHITE FIELD","Latitude":13.03074312,"Longitude":77.70817202,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"40025","Outlet name":"40025 - R-P-Somanna","Depot":"KSBCL - WHITE FIELD","Latitude":13.02127912,"Longitude":77.71122772,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"18646","Outlet name":"18646 - Manjunath P","Depot":"KSBCL - WHITE FIELD","Latitude":13.05363284,"Longitude":77.7628351,"Execution Champion Name":"Madhu T R","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"20148","Outlet name":"20148 - G M Rathnamma","Depot":"KSBCL - WHITE FIELD","Latitude":13.026806,"Longitude":77.7208906,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"41866","Outlet name":"41866-Blue Rock Partners :Raghu .R & Purushotham","Depot":"KSBCL - WHITE FIELD","Latitude":13.0203655,"Longitude":77.7213191,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"1835","Outlet name":"1835 - Smt-R-Mythri","Depot":"KSBCL - WHITE FIELD","Latitude":12.99233678,"Longitude":77.67763976,"Execution Champion Name":"Madhu T R","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"43982","Outlet name":"43982-OM SAI RAM HOSPITALITY","Depot":"KSBCL - WHITE FIELD","Latitude":13.0560223,"Longitude":77.7680146,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"45179","Outlet name":"45179-Pramila L","Depot":"KSBCL - WHITE FIELD","Latitude":13.0475858148432,"Longitude":77.7526666999999,"Execution Champion Name":"Madhu T R","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"44571","Outlet name":"44571-C R BOARDING AND LODGING","Depot":"KSBCL - WHITE FIELD","Latitude":13.02395213,"Longitude":77.72087764,"Execution Champion Name":"Madhu T R","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"44564","Outlet name":"44564-T N THIMMEGOWDA","Depot":"KSBCL - WHITE FIELD","Latitude":13.0307431,"Longitude":77.708172,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"44857","Outlet name":"44857-ROHITH REDDY A","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.95254467,"Longitude":77.65270159,"Execution Champion Name":"Madhu T R","Beat":"Indira Nagar"},{"BM Mapped":"Manjunatha S","Outlet code":"45126","Outlet name":"45126-Shruthi","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.92867673,"Longitude":77.73953777,"Execution Champion Name":"Madhu T R","Beat":"Whitefield"},{"BM Mapped":"Manjunatha S","Outlet code":"44687","Outlet name":"44687-N Srinivasa Reddy","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.94384819,"Longitude":77.71546829,"Execution Champion Name":"Madhu T R","Beat":"Marathahalli"},{"BM Mapped":"Manjunatha S","Outlet code":"41324","Outlet name":"41324 - R-Manjunath","Depot":"KSBCL - WHITE FIELD","Latitude":13.01999177,"Longitude":77.76234694,"Execution Champion Name":"Madhu T R","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"13300","Outlet name":"13300 - K.R. Srinivasalu","Depot":"KSBCL - WHITE FIELD","Latitude":13.0234315,"Longitude":77.6958306,"Execution Champion Name":"Madhu T R","Beat":"Marathahalli"},{"BM Mapped":"KP Pruthviraj","Outlet code":"42291","Outlet name":"42291-M MUNIRAJU","Depot":"KSBCL - WHITE FIELD","Latitude":13.0351495,"Longitude":77.7427903,"Execution Champion Name":"Srikantha M R","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"19949","Outlet name":"19949 - Dilip Kumar G","Depot":"KSBCL - WHITE FIELD","Latitude":12.96396546,"Longitude":77.71270528,"Execution Champion Name":"Madhu T R","Beat":"Whitefield"},{"BM Mapped":"KP Pruthviraj","Outlet code":"1740","Outlet name":"1740 - H-B- Annop Kumar","Depot":"KSBCL - WHITE FIELD","Latitude":12.98930995,"Longitude":77.67523415,"Execution Champion Name":"Srikantha M R","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"15188","Outlet name":"15188 - S Narayan","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.95147817,"Longitude":77.7002766,"Execution Champion Name":"Madhu T R","Beat":"Marathahalli"},{"BM Mapped":"Manjunatha S","Outlet code":"42408","Outlet name":"42408-S Thilak Kumar","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.94816232,"Longitude":77.7055582,"Execution Champion Name":"Madhu T R","Beat":"Marathahalli"},{"BM Mapped":"Manjunatha S","Outlet code":"19712","Outlet name":"19712 - G N Manjunath","Depot":"KSBCL - WHITE FIELD","Latitude":13.03798664,"Longitude":77.68838335,"Execution Champion Name":"Madhu T R","Beat":"Marathahalli"},{"BM Mapped":"Manjunatha S","Outlet code":"45141","Outlet name":"45141-C R RESIDENCY","Depot":"KSBCL - WHITE FIELD","Latitude":13.0239521,"Longitude":77.7208776,"Execution Champion Name":"Madhu T R","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"42988","Outlet name":"42988-SAPNA M SUJAY","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.95155266,"Longitude":77.71747794,"Execution Champion Name":"Govindraju V","Beat":"Marathahalli"},{"BM Mapped":"KP Pruthviraj","Outlet code":"12429","Outlet name":"12429 - Smt-A-Jayamma","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.93577455,"Longitude":77.62846883,"Execution Champion Name":"Srikantha M R","Beat":"Koramangala"},{"BM Mapped":"Manjunatha S","Outlet code":"41881","Outlet name":"41881-SWATHI ENTERPRISES, (Partner 1: Hiriyanna Gowda B.R 2.Dhanyasri Shett","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.93804002,"Longitude":77.69911319,"Execution Champion Name":"Madhu T R","Beat":"Marathahalli"},{"BM Mapped":"Shivaraja","Outlet code":"44858","Outlet name":"44858-VANI M V","Depot":"KSBCL - WHITE FIELD","Latitude":13.02372413,"Longitude":77.69552942,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"44140","Outlet name":"44140-VENKATESH S","Depot":"KSBCL - WHITE FIELD","Latitude":13.00357445,"Longitude":77.7252711,"Execution Champion Name":"Madhu T R","Beat":"Marathahalli"},{"BM Mapped":"Shivaraja","Outlet code":"44771","Outlet name":"44771-E C PRAKASH","Depot":"KSBCL - WHITE FIELD","Latitude":13.0571832119289,"Longitude":77.7146154865078,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"14200","Outlet name":"14200 - H P Jayaramegowda","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.91998106,"Longitude":77.72779539,"Execution Champion Name":"Gajendra Kumar T","Beat":"Whitefield"},{"BM Mapped":"Manjunatha S","Outlet code":"15491","Outlet name":"15491 - R Umesh","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.94979672,"Longitude":77.71560341,"Execution Champion Name":"Madhu T R","Beat":"Marathahalli"},{"BM Mapped":"Shivaraja","Outlet code":"40193","Outlet name":"40193 - N- Thyagaraju","Depot":"KSBCL - WHITE FIELD","Latitude":12.9962935,"Longitude":77.6922735,"Execution Champion Name":"Govindraju V","Beat":"Marathahalli"},{"BM Mapped":"KP Pruthviraj","Outlet code":"19572","Outlet name":"19572 - SANAATANA ENTERPRISES","Depot":"KSBCL - WHITE FIELD","Latitude":13.01603822,"Longitude":77.70272512,"Execution Champion Name":"Srikantha M R","Beat":"KR Puram"},{"BM Mapped":"KP Pruthviraj","Outlet code":"1756","Outlet name":"1756 - M-Thimmananjaiah Mg-Partner M/S- Sura E/P","Depot":"KSBCL - KG HALLI","Latitude":12.98231331,"Longitude":77.63908803,"Execution Champion Name":"Srikantha M R","Beat":"Indira Nagar"},{"BM Mapped":"Shivaraja","Outlet code":"43852","Outlet name":"43852-T RAVI","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.95083317,"Longitude":77.69765507,"Execution Champion Name":"Govindraju V","Beat":"Marathahalli"},{"BM Mapped":"Shivaraja","Outlet code":"41897","Outlet name":"41897-MANASI VENTURES (Partners 1) Madhukar Reddy. K2) Nagaraj. M 3) Hema R","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.9510133,"Longitude":77.6978333,"Execution Champion Name":"Govindraju V","Beat":"Marathahalli"},{"BM Mapped":"Shivaraja","Outlet code":"43782","Outlet name":"43782-N GIRISH","Depot":"KSBCL - WHITE FIELD","Latitude":12.98951185,"Longitude":77.69762523,"Execution Champion Name":"Govindraju V","Beat":"Marathahalli"},{"BM Mapped":"Shivaraja","Outlet code":"43889","Outlet name":"43889-SURESH S A","Depot":"KSBCL - WHITE FIELD","Latitude":13.01663503,"Longitude":77.71895818,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"44357","Outlet name":"44357-ShadaksharayyaRajashekarayyaNavaliHirmat","Depot":"KSBCL - WHITE FIELD","Latitude":13.0080842,"Longitude":77.75794543,"Execution Champion Name":"Madhu T R","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"45360","Outlet name":"45360-Shree Chamundeshwari Enterprises","Depot":"KSBCL - WHITE FIELD","Latitude":13.0111241013349,"Longitude":77.6977778,"Execution Champion Name":"Madhu T R","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"44342","Outlet name":"44342-M/s Cocktail Boarding and Lodging","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.93914742,"Longitude":77.73391183,"Execution Champion Name":"Gajendra Kumar T","Beat":"Whitefield"},{"BM Mapped":"Shivaraja","Outlet code":"42938","Outlet name":"42938-HEMANTH KUMAR S","Depot":"KSBCL - WHITE FIELD","Latitude":12.9996114,"Longitude":77.6868662,"Execution Champion Name":"Govindraju V","Beat":"Marathahalli"},{"BM Mapped":"Manjunatha S","Outlet code":"11127","Outlet name":"11127 - P. Shantha Kumar","Depot":"KSBCL - WHITE FIELD","Latitude":12.99433222,"Longitude":77.68533301,"Execution Champion Name":"Madhu T R","Beat":"Marathahalli"},{"BM Mapped":"Manjunatha S","Outlet code":"12157","Outlet name":"12157 - Sri.M.P.Manjunath","Depot":"KSBCL - WHITE FIELD","Latitude":12.9646908,"Longitude":77.73335628,"Execution Champion Name":"Madhu T R","Beat":"Marathahalli"},{"BM Mapped":"Manjunatha S","Outlet code":"17852","Outlet name":"17852 - A Krishna Murthy","Depot":"KSBCL - WHITE FIELD","Latitude":13.0126987,"Longitude":77.6988407,"Execution Champion Name":"Madhu T R","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"16516","Outlet name":"16516 - Shankri Group Of Wines","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.89606981,"Longitude":77.72106405,"Execution Champion Name":"Madhu T R","Beat":"Marathahalli"},{"BM Mapped":"Manjunatha S","Outlet code":"19969","Outlet name":"19969 - Sri .M Shivakumar","Depot":"KSBCL - WHITE FIELD","Latitude":13.02288594,"Longitude":77.67912135,"Execution Champion Name":"Madhu T R","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"10423","Outlet name":"10423 - S.A. Suresh","Depot":"KSBCL - WHITE FIELD","Latitude":12.99405812,"Longitude":77.70167101,"Execution Champion Name":"Govindraju V","Beat":"Marathahalli"},{"BM Mapped":"Shivaraja","Outlet code":"13945","Outlet name":"13945 - Basavaraj C","Depot":"KSBCL - WHITE FIELD","Latitude":13.01327595,"Longitude":77.67802633,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"1702","Outlet name":"1702 - A- Jayaram","Depot":"KSBCL - WHITE FIELD","Latitude":12.99887187,"Longitude":77.6747993,"Execution Champion Name":"Madhu T R","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"1779","Outlet name":"1779 - B.Jayarame Gowda","Depot":"KSBCL - WHITE FIELD","Latitude":13.051681,"Longitude":77.7194372,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"1795","Outlet name":"1795 - C-V Munivenkatappa Bruce Bar & Resturant-","Depot":"KSBCL - WHITE FIELD","Latitude":13.01487497,"Longitude":77.72506021,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"18619","Outlet name":"18619 - Suguna Naveen","Depot":"KSBCL - WHITE FIELD","Latitude":13.0446124,"Longitude":77.6800608,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"18821","Outlet name":"18821 - JAGADEESH Y M","Depot":"KSBCL - WHITE FIELD","Latitude":13.0121349,"Longitude":77.66633056,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"19532","Outlet name":"19532 - LIQUOR FEST LLP","Depot":"KSBCL - WHITE FIELD","Latitude":13.0115927,"Longitude":77.6718763,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"40115","Outlet name":"40115 - N- Girish","Depot":"KSBCL - WHITE FIELD","Latitude":12.99382029,"Longitude":77.70184066,"Execution Champion Name":"Govindraju V","Beat":"Marathahalli"},{"BM Mapped":"Shivaraja","Outlet code":"42425","Outlet name":"42425-Sri S Venkatesh","Depot":"KSBCL - WHITE FIELD","Latitude":13.00734036,"Longitude":77.74425142,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"43325","Outlet name":"43325-MANJUNATHA RECIDENCY AND HOTEL","Depot":"KSBCL - WHITE FIELD","Latitude":13.02726631,"Longitude":77.76627436,"Execution Champion Name":"Govindraju V","Beat":"Whitefield"},{"BM Mapped":"Shivaraja","Outlet code":"43470","Outlet name":"43470-Sri Shreyas K","Depot":"KSBCL - WHITE FIELD","Latitude":13.02185992,"Longitude":77.69847818,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"45410","Outlet name":"45410-VINTAGE GROUPS","Depot":"KSBCL - WHITE FIELD","Latitude":13.0005822959665,"Longitude":77.7508888999999,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"15600","Outlet name":"15600 - Manjunatha Babu H A","Depot":"KSBCL - WHITE FIELD","Latitude":12.98617005,"Longitude":77.7673801,"Execution Champion Name":"Govindraju V","Beat":"Indira Nagar"},{"BM Mapped":"Shivaraja","Outlet code":"1689","Outlet name":"1689 - K- Chandrakala","Depot":"KSBCL - WHITE FIELD","Latitude":12.9771192,"Longitude":77.6965039,"Execution Champion Name":"Govindraju V","Beat":"Marathahalli"},{"BM Mapped":"Shivaraja","Outlet code":"17964","Outlet name":"17964 - Thanuja Sandeep","Depot":"KSBCL - WHITE FIELD","Latitude":12.9963022,"Longitude":77.6926689,"Execution Champion Name":"Govindraju V","Beat":"Marathahalli"},{"BM Mapped":"Shivaraja","Outlet code":"1701","Outlet name":"1701 - H-B- Shiva Shankar","Depot":"KSBCL - WHITE FIELD","Latitude":12.98333459,"Longitude":77.76841275,"Execution Champion Name":"Govindraju V","Beat":"Indira Nagar"},{"BM Mapped":"Shivaraja","Outlet code":"18669","Outlet name":"18669 - Priyanka V Asrani","Depot":"KSBCL - WHITE FIELD","Latitude":13.0121718,"Longitude":77.6663618,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"19754","Outlet name":"19754 - Santhosh M V","Depot":"KSBCL - WHITE FIELD","Latitude":13.0376783,"Longitude":77.7329933,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"1620","Outlet name":"1620 - V- Vasudev","Depot":"KSBCL - WHITE FIELD","Latitude":13.0361482,"Longitude":77.7368763,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"17947","Outlet name":"17947 - S Lokesh","Depot":"KSBCL - WHITE FIELD","Latitude":12.99630803,"Longitude":77.69265108,"Execution Champion Name":"Govindraju V","Beat":"Whitefield"},{"BM Mapped":"Shivaraja","Outlet code":"42616","Outlet name":"42616-DIWINE RESTO","Depot":"KSBCL - WHITE FIELD","Latitude":13.03562768,"Longitude":77.70639639,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"19459","Outlet name":"19459 - N.Sarasa Kavya Bar","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.93932975,"Longitude":77.73248926,"Execution Champion Name":"Gajendra Kumar T","Beat":"Whitefield"},{"BM Mapped":"Shivaraja","Outlet code":"1055","Outlet name":"1055 - M-Somashekar","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.95883509,"Longitude":77.65987515,"Execution Champion Name":"Govindraju V","Beat":"Indira Nagar"},{"BM Mapped":"Shivaraja","Outlet code":"1136","Outlet name":"1136 - K-R- Srinivasa Murthy","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.96008682,"Longitude":77.64453158,"Execution Champion Name":"Govindraju V","Beat":"Indira Nagar"},{"BM Mapped":"Shivaraja","Outlet code":"19210","Outlet name":"19210 - S L V BAR AND RESTAURANT","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.932885,"Longitude":77.6323533,"Execution Champion Name":"Govindraju V","Beat":"Koramangala"},{"BM Mapped":"Shivaraja","Outlet code":"42615","Outlet name":"42615-RAMA REDDY","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.9178334,"Longitude":77.72724487,"Execution Champion Name":"Govindraju V","Beat":"Whitefield"},{"BM Mapped":"Shivaraja","Outlet code":"43281","Outlet name":"43281-D S SHASHIKALA","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.92617067,"Longitude":77.67647199,"Execution Champion Name":"Govindraju V","Beat":"Marathahalli"},{"BM Mapped":"Manjunatha S","Outlet code":"12449","Outlet name":"12449 - Thyagaraju","Depot":"KSBCL - WHITE FIELD","Latitude":13.02101845,"Longitude":77.72081863,"Execution Champion Name":"Madhu T R","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"1791","Outlet name":"1791 - R- Shivashankar Balaji S/O B-P Ramanjnappa-","Depot":"KSBCL - WHITE FIELD","Latitude":13.01005305,"Longitude":77.69739155,"Execution Champion Name":"Madhu T R","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"18464","Outlet name":"18464 - M G SRIDHAR","Depot":"KSBCL - WHITE FIELD","Latitude":12.97605354,"Longitude":77.75991082,"Execution Champion Name":"Madhu T R","Beat":"Whitefield"},{"BM Mapped":"KP Pruthviraj","Outlet code":"44884","Outlet name":"44884-BHAGINI INFRA PVT LTD","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.95919842,"Longitude":77.65435819,"Execution Champion Name":"R Praveen","Beat":"Indira Nagar"},{"BM Mapped":"KP Pruthviraj","Outlet code":"44877","Outlet name":"44877-BHAGINI INFRA PVT LTD","Depot":"KSBCL - WHITE FIELD","Latitude":12.99125575,"Longitude":77.72093967,"Execution Champion Name":"R Praveen","Beat":"KR Puram"},{"BM Mapped":"KP Pruthviraj","Outlet code":"44882","Outlet name":"44882-BHAGINI INFRA PRIVATE LIMITED","Depot":"KSBCL - WHITE FIELD","Latitude":13.01982485,"Longitude":77.70863939,"Execution Champion Name":"R Praveen","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"18723","Outlet name":"18723 - Kavya Satish","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.95703443,"Longitude":77.74212308,"Execution Champion Name":"Govindraju V","Beat":"Whitefield"},{"BM Mapped":"Manjunatha S","Outlet code":"12464","Outlet name":"12464 - 12464 - Smt-Vijayamma","Depot":"KSBCL - WHITE FIELD","Latitude":12.99888134,"Longitude":77.67477214,"Execution Champion Name":"Madhu T R","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"44472","Outlet name":"44472-C S KIRAN","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.93843769,"Longitude":77.7143525,"Execution Champion Name":"Madhu T R","Beat":"Marathahalli"},{"BM Mapped":"Manjunatha S","Outlet code":"45331","Outlet name":"45331-M Madhu Kumar","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.92572854,"Longitude":77.72849578,"Execution Champion Name":"Gajendra Kumar T","Beat":"Whitefield"},{"BM Mapped":"Manjunatha S","Outlet code":"43046","Outlet name":"43046-A S ENTERPRISES","Depot":"KSBCL - WHITE FIELD","Latitude":13.0049674,"Longitude":77.66253725,"Execution Champion Name":"Gajendra Kumar T","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"19946","Outlet name":"19946 - Gayathri Devi","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.92878686,"Longitude":77.67655816,"Execution Champion Name":"Gajendra Kumar T","Beat":"Marathahalli"},{"BM Mapped":"Manjunatha S","Outlet code":"45377","Outlet name":"45377-Swargha Residency","Depot":"KSBCL - WHITE FIELD","Latitude":13.02834294,"Longitude":77.6975565,"Execution Champion Name":"Gajendra Kumar T","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"40581","Outlet name":"40581 - D-Anushya","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.92560501,"Longitude":77.73539342,"Execution Champion Name":"Gajendra Kumar T","Beat":"Whitefield"},{"BM Mapped":"Manjunatha S","Outlet code":"42896","Outlet name":"42896-N Ramegowda","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.92884829,"Longitude":77.67642673,"Execution Champion Name":"Gajendra Kumar T","Beat":"Marathahalli"},{"BM Mapped":"Manjunatha S","Outlet code":"42491","Outlet name":"42491-Mr K E Rajappa","Depot":"KSBCL - WHITE FIELD","Latitude":12.9563992,"Longitude":77.7097223,"Execution Champion Name":"Gajendra Kumar T","Beat":"Marathahalli"},{"BM Mapped":"KP Pruthviraj","Outlet code":"1747","Outlet name":"1747 - Chandra Singh","Depot":"KSBCL - WHITE FIELD","Latitude":13.00636328,"Longitude":77.75726985,"Execution Champion Name":"R Praveen","Beat":"KR Puram"},{"BM Mapped":"KP Pruthviraj","Outlet code":"44868","Outlet name":"44868-BHAGINI INFRA PVT LTD","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.92546744,"Longitude":77.67597511,"Execution Champion Name":"R Praveen","Beat":"Sarjapur Rd"},{"BM Mapped":"KP Pruthviraj","Outlet code":"41248","Outlet name":"41248 - Smt-V-Shashikala","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.90772163,"Longitude":77.69435663,"Execution Champion Name":"R Praveen","Beat":"Sarjapur Rd"},{"BM Mapped":"KP Pruthviraj","Outlet code":"44880","Outlet name":"44880-BHAGINI INFRA PRIVATE LIMITED","Depot":"KSBCL - KOTHANUR","Latitude":13.01302932,"Longitude":77.663817,"Execution Champion Name":"R Praveen","Beat":"KR Puram"},{"BM Mapped":"KP Pruthviraj","Outlet code":"44904","Outlet name":"44904-BHAGINI INFRA PRIVATE LIMITED","Depot":"KSBCL - KOTHANUR","Latitude":12.97517958,"Longitude":77.67858826,"Execution Champion Name":"Devaraju C","Beat":"Indira Nagar"},{"BM Mapped":"Manjunatha S","Outlet code":"883","Outlet name":"883 - N- Saroja","Depot":"KSBCL - WHITE FIELD","Latitude":13.03513479,"Longitude":77.73554061,"Execution Champion Name":"Gajendra Kumar T","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"19518","Outlet name":"19518 - N SAROJA","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.95747488,"Longitude":77.65861988,"Execution Champion Name":"Gajendra Kumar T","Beat":"Marathahalli"},{"BM Mapped":"Manjunatha S","Outlet code":"1632","Outlet name":"1632 - Munichannamma","Depot":"KSBCL - WHITE FIELD","Latitude":13.0453565,"Longitude":77.7497031,"Execution Champion Name":"Gajendra Kumar T","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"40217","Outlet name":"40217 - M- H- Padmavathi","Depot":"KSBCL - WHITE FIELD","Latitude":12.96982726,"Longitude":77.75165465,"Execution Champion Name":"Gajendra Kumar T","Beat":"Whitefield"},{"BM Mapped":"Manjunatha S","Outlet code":"12222","Outlet name":"12222 - K-S- Raghu Kumar","Depot":"KSBCL - WHITE FIELD","Latitude":12.9683374,"Longitude":77.75677029,"Execution Champion Name":"Gajendra Kumar T","Beat":"Whitefield"},{"BM Mapped":"Manjunatha S","Outlet code":"3171","Outlet name":"3171 - M-H- Padmavathi","Depot":"KSBCL - WHITE FIELD","Latitude":12.98304676,"Longitude":77.7336416,"Execution Champion Name":"Gajendra Kumar T","Beat":"Marathahalli"},{"BM Mapped":"Manjunatha S","Outlet code":"1731","Outlet name":"1731 - K-S- Raghu Kumar","Depot":"KSBCL - WHITE FIELD","Latitude":12.9832173,"Longitude":77.76822969,"Execution Champion Name":"Gajendra Kumar T","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"17942","Outlet name":"17942 - Yamuna M A","Depot":"KSBCL - WHITE FIELD","Latitude":12.97048299,"Longitude":77.71256883,"Execution Champion Name":"Gajendra Kumar T","Beat":"Whitefield"},{"BM Mapped":"Manjunatha S","Outlet code":"41862","Outlet name":"41862-C S Vijay Kumar","Depot":"KSBCL - WHITE FIELD","Latitude":12.97685235,"Longitude":77.7249784,"Execution Champion Name":"Gajendra Kumar T","Beat":"Whitefield"},{"BM Mapped":"Manjunatha S","Outlet code":"19586","Outlet name":"19586 - M A Yamuna","Depot":"KSBCL - KOTHANUR","Latitude":13.01136266,"Longitude":77.67689411,"Execution Champion Name":"Gajendra Kumar T","Beat":"Marathahalli"},{"BM Mapped":"Manjunatha S","Outlet code":"14817","Outlet name":"14817 - Deepak.M.Das","Depot":"KSBCL - HEBBALA","Latitude":13.02786734,"Longitude":77.58630686,"Execution Champion Name":"Gajendra Kumar T","Beat":"Indira Nagar"},{"BM Mapped":"Manjunatha S","Outlet code":"43543","Outlet name":"43543-T Lalitha WO H NINGAPPA","Depot":"KSBCL - HEBBALA","Latitude":13.02295943,"Longitude":77.59267576,"Execution Champion Name":"Gajendra Kumar T","Beat":"RT NAGAR"},{"BM Mapped":"KP Pruthviraj","Outlet code":"40785","Outlet name":"40785 - S-A-Suresh","Depot":"KSBCL - WHITE FIELD","Latitude":12.96920486,"Longitude":77.73968663,"Execution Champion Name":"Devaraju C","Beat":"Whitefield"},{"BM Mapped":"KP Pruthviraj","Outlet code":"40086","Outlet name":"40086 - Naveen-V","Depot":"KSBCL - WHITE FIELD","Latitude":12.95632933,"Longitude":77.7282735,"Execution Champion Name":"Devaraju C","Beat":"Whitefield"},{"BM Mapped":"KP Pruthviraj","Outlet code":"12830","Outlet name":"12830 - G- Dhananjaya Reddy","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.95586144,"Longitude":77.69307185,"Execution Champion Name":"Devaraju C","Beat":"Marathahalli"},{"BM Mapped":"KP Pruthviraj","Outlet code":"3164","Outlet name":"3164 - K-Vijaya Kumari","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.95612021,"Longitude":77.69408505,"Execution Champion Name":"Devaraju C","Beat":"Marathahalli"},{"BM Mapped":"KP Pruthviraj","Outlet code":"1137","Outlet name":"1137 - R- Suresh Kumar","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.94459678,"Longitude":77.67833512,"Execution Champion Name":"Devaraju C","Beat":"Marathahalli"},{"BM Mapped":"KP Pruthviraj","Outlet code":"14329","Outlet name":"14329 - Uma","Depot":"KSBCL - ATTIBELE","Latitude":12.88730077,"Longitude":77.74224043,"Execution Champion Name":"Devaraju C","Beat":"Whitefield"},{"BM Mapped":"Manjunatha S","Outlet code":"14092","Outlet name":"14092 - Sapthagiri wine stores","Depot":"KSBCL - WHITE FIELD","Latitude":12.99474025,"Longitude":77.685102,"Execution Champion Name":"Gajendra Kumar T","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"42973","Outlet name":"42973-S G Prakashbabu","Depot":"KSBCL - WHITE FIELD","Latitude":13.02000843,"Longitude":77.71003515,"Execution Champion Name":"Gajendra Kumar T","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"41859","Outlet name":"41859-M B Ashoka","Depot":"KSBCL - KOTHANUR","Latitude":13.03182104,"Longitude":77.66075224,"Execution Champion Name":"Gajendra Kumar T","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"1555","Outlet name":"1555 - S.Babureddy","Depot":"KSBCL - KOTHANUR","Latitude":12.99162786,"Longitude":77.67989416,"Execution Champion Name":"Gajendra Kumar T","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"18186","Outlet name":"18186 - R Satyanarayana","Depot":"KSBCL - KOTHANUR","Latitude":13.01198104,"Longitude":77.6741606,"Execution Champion Name":"Gajendra Kumar T","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"2059","Outlet name":"2059 - B- Kenchappa","Depot":"KSBCL - SAKALAVARA-2","Latitude":12.96227691,"Longitude":77.5776393,"Execution Champion Name":"Gajendra Kumar T","Beat":"KR MARKET"},{"BM Mapped":"KP Pruthviraj","Outlet code":"44875","Outlet name":"44875-BHAGINI INFRA PVT LTD","Depot":"KSBCL - ATTIBELE","Latitude":12.91369227,"Longitude":77.67956391,"Execution Champion Name":"Devaraju C","Beat":"Marathahalli"},{"BM Mapped":"KP Pruthviraj","Outlet code":"12083","Outlet name":"12083 - Smt-S-H-Padmavathi","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.9364771,"Longitude":77.70856563,"Execution Champion Name":"Devaraju C","Beat":"Whitefield"},{"BM Mapped":"KP Pruthviraj","Outlet code":"44872","Outlet name":"44872-BHAGINI INFRA PRIVATE LIMITED","Depot":"KSBCL - KOTHANUR","Latitude":13.01255598,"Longitude":77.665256,"Execution Champion Name":"Srikantha M R","Beat":"KR Puram"},{"BM Mapped":"KP Pruthviraj","Outlet code":"44389","Outlet name":"44389-Sri, T. RAMESH BABU","Depot":"KSBCL - ATTIBELE","Latitude":12.70428746,"Longitude":77.70148091,"Execution Champion Name":"Srikantha M R","Beat":"Sarjapur Rd"},{"BM Mapped":"KP Pruthviraj","Outlet code":"13192","Outlet name":"13192 - Sura Enterprises","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.93634312,"Longitude":77.70868365,"Execution Champion Name":"R Praveen","Beat":"Whitefield"},{"BM Mapped":"KP Pruthviraj","Outlet code":"44866","Outlet name":"44866-BHAGINI INFRA PVT LTD","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.93898175,"Longitude":77.69635253,"Execution Champion Name":"R Praveen","Beat":"Marathahalli"},{"BM Mapped":"Manjunatha S","Outlet code":"10639","Outlet name":"10639 - N. Ramesh","Depot":"KSBCL - WHITE FIELD","Latitude":13.02058498,"Longitude":77.68217672,"Execution Champion Name":"Gajendra Kumar T","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"43178","Outlet name":"43178-Lakshmamma P","Depot":"KSBCL - WHITE FIELD","Latitude":13.01822292,"Longitude":77.70516928,"Execution Champion Name":"Gajendra Kumar T","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"41216","Outlet name":"41216 - Sanjay R-Asrani","Depot":"KSBCL - BAGALKUNTE","Latitude":12.99975914,"Longitude":77.57232115,"Execution Champion Name":"Gajendra Kumar T","Beat":"MALLESHWARAM"},{"BM Mapped":"Shivaraja","Outlet code":"42198","Outlet name":"42198-E C PRAKASH","Depot":"KSBCL - WHITE FIELD","Latitude":13.0570309,"Longitude":77.7145161,"Execution Champion Name":"Govindraju V","Beat":"Whitefield"},{"BM Mapped":"Shivaraja","Outlet code":"42738","Outlet name":"42738-PUTTA LINGAIAH","Depot":"KSBCL - WHITE FIELD","Latitude":13.06998,"Longitude":77.72,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"18183","Outlet name":"18183 - E C Prakash","Depot":"KSBCL - DODDABALLAPURA","Latitude":13.06228204,"Longitude":77.68710293,"Execution Champion Name":"Govindraju V","Beat":"Indira Nagar"},{"BM Mapped":"Shivaraja","Outlet code":"19507","Outlet name":"19507 - ABILASH M P","Depot":"KSBCL - DODDABALLAPURA","Latitude":13.06953475,"Longitude":77.67739132,"Execution Champion Name":"Govindraju V","Beat":"THANISANDRA"},{"BM Mapped":"Shivaraja","Outlet code":"1135","Outlet name":"1135 - Sowbhagya","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.94320774,"Longitude":77.75063742,"Execution Champion Name":"Govindraju V","Beat":"Whitefield"},{"BM Mapped":"Shivaraja","Outlet code":"40436","Outlet name":"40436 - K.Venkateshwara","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.93905364,"Longitude":77.74000447,"Execution Champion Name":"Govindraju V","Beat":"Whitefield"},{"BM Mapped":"Shivaraja","Outlet code":"40407","Outlet name":"40407 - SOWBHAGYA","Depot":"KSBCL - ATTIBELE","Latitude":12.85825,"Longitude":77.76842,"Execution Champion Name":"Govindraju V","Beat":"Sarjapur Rd"},{"BM Mapped":"Shivaraja","Outlet code":"12654","Outlet name":"12654 - Ssri Shivaraju","Depot":"KSBCL - WHITE FIELD","Latitude":13.00814953,"Longitude":77.69351576,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"43991","Outlet name":"43991-KESHAVAMURTHY P.M","Depot":"KSBCL - WHITE FIELD","Latitude":0.0,"Longitude":0.0,"Execution Champion Name":"Govindraju V","Beat":"Unknown"},{"BM Mapped":"Shivaraja","Outlet code":"1777","Outlet name":"1777 - Sri Shivaraju","Depot":"KSBCL - WHITE FIELD","Latitude":13.0115548,"Longitude":77.6719345,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"42326","Outlet name":"42326-Smt K N Lakshmi","Depot":"KSBCL - WHITE FIELD","Latitude":13.02375679,"Longitude":77.69543018,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"42906","Outlet name":"42906-K N Lakshmi","Depot":"KSBCL - WHITE FIELD","Latitude":13.07786236,"Longitude":77.7162867,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"17820","Outlet name":"17820 - K.N.Lakshmi","Depot":"KSBCL - WHITE FIELD","Latitude":13.03586841,"Longitude":77.69633844,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"41220","Outlet name":"41220 - Smt-T-P-Beena","Depot":"KSBCL - WHITE FIELD","Latitude":13.0308236,"Longitude":77.7169244,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"43357","Outlet name":"43357-Smt.K.N.Lakshmi","Depot":"KSBCL - WHITE FIELD","Latitude":13.02386851,"Longitude":77.691084,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"42602","Outlet name":"42602-Sri Shivaraju S/O Adavirangaiah","Depot":"KSBCL - WHITE FIELD","Latitude":13.0404301,"Longitude":77.728015,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"41334","Outlet name":"41334 - Shivaraju","Depot":"KSBCL - WHITE FIELD","Latitude":13.0272887,"Longitude":77.6921488,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"15757","Outlet name":"15757 - K N Lakshmi","Depot":"KSBCL - WHITE FIELD","Latitude":13.01091088,"Longitude":77.69783914,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Shivaraja","Outlet code":"40793","Outlet name":"40793 - Shivaraju","Depot":"KSBCL - WHITE FIELD","Latitude":13.03608693,"Longitude":77.70782433,"Execution Champion Name":"Govindraju V","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"41420","Outlet name":"41420 - A-Muralinarayanan","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.94266696,"Longitude":77.74842661,"Execution Champion Name":"Gajendra Kumar T","Beat":"Whitefield"},{"BM Mapped":"Manjunatha S","Outlet code":"18932","Outlet name":"18932 - Pramila.R","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.9307877,"Longitude":77.75759675,"Execution Champion Name":"Gajendra Kumar T","Beat":"Whitefield"},{"BM Mapped":"Manjunatha S","Outlet code":"18929","Outlet name":"18929 - Srinidhi Residency Hotel","Depot":"KSBCL - WHITE FIELD","Latitude":13.0325403,"Longitude":77.69298635,"Execution Champion Name":"Gajendra Kumar T","Beat":"KR Puram"},{"BM Mapped":"KP Pruthviraj","Outlet code":"44863","Outlet name":"44863-BHAGINI INFRA PVT LTD","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.95590783,"Longitude":77.72933431,"Execution Champion Name":"Devaraju C","Beat":"Whitefield"},{"BM Mapped":"KP Pruthviraj","Outlet code":"45343","Outlet name":"45343-MUNNAGAPPA J","Depot":"KSBCL - WHITE FIELD","Latitude":13.0253202024273,"Longitude":77.6953057867827,"Execution Champion Name":"Srikantha M R","Beat":"KR Puram"},{"BM Mapped":"KP Pruthviraj","Outlet code":"1568","Outlet name":"1568 - H-B- Shiva Shankar","Depot":"KSBCL - WHITE FIELD","Latitude":13.0497458,"Longitude":77.7611426,"Execution Champion Name":"Srikantha M R","Beat":"KR Puram"},{"BM Mapped":"KP Pruthviraj","Outlet code":"41724","Outlet name":"41724-D.Dharani","Depot":"KSBCL - ATTIBELE","Latitude":12.9147269,"Longitude":77.66698301,"Execution Champion Name":"Srikantha M R","Beat":"Sarjapur Rd"},{"BM Mapped":"KP Pruthviraj","Outlet code":"18514","Outlet name":"18514 - T Sumitra","Depot":"KSBCL - WHITE FIELD","Latitude":13.02372903,"Longitude":77.6954855,"Execution Champion Name":"Srikantha M R","Beat":"KR Puram"},{"BM Mapped":"KP Pruthviraj","Outlet code":"1664","Outlet name":"1664 - M-Thimmananjaiah","Depot":"KSBCL - WHITE FIELD","Latitude":13.0086794,"Longitude":77.75873937,"Execution Champion Name":"Srikantha M R","Beat":"KR Puram"},{"BM Mapped":"KP Pruthviraj","Outlet code":"1631","Outlet name":"1631 - M- Thimmananjaiah","Depot":"KSBCL - WHITE FIELD","Latitude":13.05028112,"Longitude":77.76154093,"Execution Champion Name":"Srikantha M R","Beat":"KR Puram"},{"BM Mapped":"KP Pruthviraj","Outlet code":"43751","Outlet name":"43751-Sathwick S","Depot":"KSBCL - WHITE FIELD","Latitude":13.01340629,"Longitude":77.73412373,"Execution Champion Name":"Srikantha M R","Beat":"KR Puram"},{"BM Mapped":"KP Pruthviraj","Outlet code":"12107","Outlet name":"12107 - Chandramohan Reddy","Depot":"KSBCL - WHITE FIELD","Latitude":13.02358432,"Longitude":77.69589856,"Execution Champion Name":"Srikantha M R","Beat":"KR Puram"},{"BM Mapped":"Manjunatha S","Outlet code":"18506","Outlet name":"18506 - Vinay.N","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.93570821,"Longitude":77.62841854,"Execution Champion Name":"Gajendra Kumar T","Beat":"Koramangala"},{"BM Mapped":"Manjunatha S","Outlet code":"18236","Outlet name":"18236 - B L Shivarudraiah","Depot":"KSBCL - HONGASANDRA","Latitude":12.9130552,"Longitude":77.6447353,"Execution Champion Name":"Gajendra Kumar T","Beat":"Sarjapur Rd"},{"BM Mapped":"KP Pruthviraj","Outlet code":"17829","Outlet name":"17829 - Arjun Kumar P V","Depot":"KSBCL - KG HALLI","Latitude":12.96943683,"Longitude":77.60649182,"Execution Champion Name":"R Praveen","Beat":"Indira Nagar"},{"BM Mapped":"KP Pruthviraj","Outlet code":"45435","Outlet name":"45435-Smt Lakshmamma","Depot":"KSBCL - WHITE FIELD","Latitude":12.9926345730377,"Longitude":77.7170107288359,"Execution Champion Name":"R Praveen","Beat":"Whitefield"},{"BM Mapped":"KP Pruthviraj","Outlet code":"15740","Outlet name":"15740 - Sowjanya M K","Depot":"KSBCL - WHITE FIELD","Latitude":12.9595775,"Longitude":77.7017459,"Execution Champion Name":"R Praveen","Beat":"Marathahalli"},{"BM Mapped":"KP Pruthviraj","Outlet code":"44693","Outlet name":"44693-Shilpa S V","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.92058071,"Longitude":77.69614834,"Execution Champion Name":"R Praveen","Beat":"Marathahalli"},{"BM Mapped":"KP Pruthviraj","Outlet code":"18148","Outlet name":"18148 - Bhadrambike","Depot":"KSBCL - WHITE FIELD","Latitude":12.96797114,"Longitude":77.74990216,"Execution Champion Name":"R Praveen","Beat":"Whitefield"},{"BM Mapped":"KP Pruthviraj","Outlet code":"41777","Outlet name":"41777-BENGALURU TONIC","Depot":"KSBCL - WHITE FIELD","Latitude":12.95654106,"Longitude":77.71039456,"Execution Champion Name":"R Praveen","Beat":"Marathahalli"},{"BM Mapped":"KP Pruthviraj","Outlet code":"9882","Outlet name":"9882 - Vasudeva Rao","Depot":"KSBCL - WHITE FIELD","Latitude":12.98879181,"Longitude":77.68942941,"Execution Champion Name":"R Praveen","Beat":"Marathahalli"},{"BM Mapped":"KP Pruthviraj","Outlet code":"43995","Outlet name":"43995-Bhagini Enterprises","Depot":"KSBCL - WHITE FIELD","Latitude":12.98376323,"Longitude":77.75215823,"Execution Champion Name":"R Praveen","Beat":"Whitefield"},{"BM Mapped":"KP Pruthviraj","Outlet code":"1626","Outlet name":"1626 - N- Srinivasa Reddy","Depot":"KSBCL - WHITE FIELD","Latitude":12.99236815,"Longitude":77.71707058,"Execution Champion Name":"Devaraju C","Beat":"Marathahalli"},{"BM Mapped":"KP Pruthviraj","Outlet code":"43770","Outlet name":"43770-BHAGINI HOSPITALITIES PRIVATE LIMITED","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.95605585,"Longitude":77.72934102,"Execution Champion Name":"Devaraju C","Beat":"Whitefield"},{"BM Mapped":"KP Pruthviraj","Outlet code":"41387","Outlet name":"41387 - N-Suryanarayana Reddy","Depot":"KSBCL - WHITE FIELD","Latitude":12.96901372,"Longitude":77.7547868,"Execution Champion Name":"Devaraju C","Beat":"Whitefield"},{"BM Mapped":"KP Pruthviraj","Outlet code":"1045","Outlet name":"1045 - S-N- Subba Reddy","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.95576407,"Longitude":77.69229535,"Execution Champion Name":"Devaraju C","Beat":"Marathahalli"},{"BM Mapped":"KP Pruthviraj","Outlet code":"13500","Outlet name":"13500 - N. Suryanarayana Reddy","Depot":"KSBCL - WHITE FIELD","Latitude":12.97145009,"Longitude":77.73481339,"Execution Champion Name":"Devaraju C","Beat":"Whitefield"},{"BM Mapped":"KP Pruthviraj","Outlet code":"11302","Outlet name":"11302 - K Muniraju","Depot":"KSBCL - WHITE FIELD","Latitude":12.99272849,"Longitude":77.75450584,"Execution Champion Name":"Devaraju C","Beat":"Whitefield"},{"BM Mapped":"KP Pruthviraj","Outlet code":"19503","Outlet name":"19503 - R Sheela","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.93657839,"Longitude":77.70370178,"Execution Champion Name":"Devaraju C","Beat":"Marathahalli"},{"BM Mapped":"KP Pruthviraj","Outlet code":"42656","Outlet name":"42656-Sri Manigandon","Depot":"KSBCL - WHITE FIELD","Latitude":12.99231947,"Longitude":77.68229105,"Execution Champion Name":"Devaraju C","Beat":"Marathahalli"},{"BM Mapped":"KP Pruthviraj","Outlet code":"17879","Outlet name":"17879 - S J Nirmal Kumar","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.94640831,"Longitude":77.71790341,"Execution Champion Name":"Devaraju C","Beat":"Marathahalli"},{"BM Mapped":"KP Pruthviraj","Outlet code":"43029","Outlet name":"43029-DAYANAND T","Depot":"KSBCL - KOTHANUR","Latitude":12.99545538,"Longitude":77.66631413,"Execution Champion Name":"Srikantha M R","Beat":"KR Puram"},{"BM Mapped":"KP Pruthviraj","Outlet code":"10442","Outlet name":"10442 - Bhagini Enterprises","Depot":"KSBCL - WHITE FIELD","Latitude":12.9939728,"Longitude":77.6750019,"Execution Champion Name":"R Praveen","Beat":"KR Puram"},{"BM Mapped":"KP Pruthviraj","Outlet code":"10699","Outlet name":"10699 - Vasudeva Rao","Depot":"KSBCL - WHITE FIELD","Latitude":12.97006512,"Longitude":77.74978481,"Execution Champion Name":"Devaraju C","Beat":"Whitefield"},{"BM Mapped":"KP Pruthviraj","Outlet code":"19523","Outlet name":"19523 - M K Sowjanya","Depot":"KSBCL - WHITE FIELD","Latitude":13.00700324,"Longitude":77.74431176,"Execution Champion Name":"Srikantha M R","Beat":"KR Puram"},{"BM Mapped":"KP Pruthviraj","Outlet code":"18272","Outlet name":"18272 - K.M. Gangadhar","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.88726318,"Longitude":77.73862179,"Execution Champion Name":"Srikantha M R","Beat":"E CITY"},{"BM Mapped":"KP Pruthviraj","Outlet code":"41338","Outlet name":"41338 - R.Suresh Kumar","Depot":"KSBCL - WHITE FIELD","Latitude":12.99192156,"Longitude":77.72111636,"Execution Champion Name":"Srikantha M R","Beat":"KR Puram"},{"BM Mapped":"KP Pruthviraj","Outlet code":"43974","Outlet name":"43974-Bhagini Enterprises","Depot":"KSBCL - WHITE FIELD","Latitude":13.02015086,"Longitude":77.72073146,"Execution Champion Name":"Srikantha M R","Beat":"KR Puram"},{"BM Mapped":"KP Pruthviraj","Outlet code":"14691","Outlet name":"14691 - M RAMACHANDRAPPA","Depot":"KSBCL - DODDABALLAPURA","Latitude":13.1434,"Longitude":77.62074,"Execution Champion Name":"Srikantha M R","Beat":"KR Puram"},{"BM Mapped":"KP Pruthviraj","Outlet code":"19749","Outlet name":"19749 - Nishanth S","Depot":"KSBCL - WHITE FIELD","Latitude":12.98330421,"Longitude":77.76824277,"Execution Champion Name":"Srikantha M R","Beat":"Whitefield"},{"BM Mapped":"KP Pruthviraj","Outlet code":"17433","Outlet name":"17433 - Vasudeva Rao","Depot":"KSBCL - WHITE FIELD","Latitude":12.98426929,"Longitude":77.73355711,"Execution Champion Name":"R Praveen","Beat":"Whitefield"},{"BM Mapped":"KP Pruthviraj","Outlet code":"11916","Outlet name":"11916 - Bhagini Hospitality Pvt. Ltd.","Depot":"KSBCL - WHITE FIELD","Latitude":12.9862612,"Longitude":77.74484821,"Execution Champion Name":"R Praveen","Beat":"Whitefield"},{"BM Mapped":"KP Pruthviraj","Outlet code":"15039","Outlet name":"15039 - V Narendrakumar","Depot":"KSBCL - WHITE FIELD","Latitude":12.96852004,"Longitude":77.76569836,"Execution Champion Name":"R Praveen","Beat":"Whitefield"},{"BM Mapped":"KP Pruthviraj","Outlet code":"12060","Outlet name":"12060 - S-N- Babu Reddy","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.93082005,"Longitude":77.68585168,"Execution Champion Name":"R Praveen","Beat":"Marathahalli"},{"BM Mapped":"KP Pruthviraj","Outlet code":"16523","Outlet name":"16523 - Shankari Group Of Wines","Depot":"KSBCL - WHITE FIELD","Latitude":12.97282133,"Longitude":77.69992054,"Execution Champion Name":"R Praveen","Beat":"Marathahalli"},{"BM Mapped":"KP Pruthviraj","Outlet code":"42157","Outlet name":"42157-PRATHAP D","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.95059824,"Longitude":77.69039501,"Execution Champion Name":"R Praveen","Beat":"Marathahalli"},{"BM Mapped":"KP Pruthviraj","Outlet code":"19889","Outlet name":"19889 - P Gayithri","Depot":"KSBCL - WHITE FIELD","Latitude":12.99009109,"Longitude":77.71371514,"Execution Champion Name":"Devaraju C","Beat":"Marathahalli"},{"BM Mapped":"KP Pruthviraj","Outlet code":"43989","Outlet name":"43989-BHAGINI HOSPITALITIES PRIVATE LIMITED","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.95149385,"Longitude":77.70370882,"Execution Champion Name":"Devaraju C","Beat":"Marathahalli"},{"BM Mapped":"KP Pruthviraj","Outlet code":"43987","Outlet name":"43987-Bhagini Enterprises","Depot":"KSBCL - WHITE FIELD","Latitude":12.95707658,"Longitude":77.70194292,"Execution Champion Name":"Devaraju C","Beat":"Marathahalli"},{"BM Mapped":"KP Pruthviraj","Outlet code":"10717","Outlet name":"10717 - C.Ramakrishnappa","Depot":"KSBCL - WHITE FIELD","Latitude":12.96433826,"Longitude":77.71776963,"Execution Champion Name":"Devaraju C","Beat":"Marathahalli"},{"BM Mapped":"KP Pruthviraj","Outlet code":"1142","Outlet name":"1142 - R- Sheela","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.9484921,"Longitude":77.6990108,"Execution Champion Name":"Devaraju C","Beat":"Marathahalli"},{"BM Mapped":"KP Pruthviraj","Outlet code":"43913","Outlet name":"43913-BAGEECHA BAR AND RESTAURANT","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.95652505,"Longitude":77.7114718,"Execution Champion Name":"Devaraju C","Beat":"Marathahalli"},{"BM Mapped":"KP Pruthviraj","Outlet code":"3212","Outlet name":"3212 - N- CHANDRAPPA","Depot":"KSBCL - WHITE FIELD","Latitude":12.99011,"Longitude":77.71374,"Execution Champion Name":"Srikantha M R","Beat":"Whitefield"},{"BM Mapped":"Shivaraja","Outlet code":"19615","Outlet name":"19615 - M C Sathish","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.92632818,"Longitude":77.65553501,"Execution Champion Name":"Govindraju V","Beat":"Sarjapur Rd"},{"BM Mapped":"Shivaraja","Outlet code":"3457","Outlet name":"3457 - C- Ramesh","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.95266001,"Longitude":77.65264828,"Execution Champion Name":"Govindraju V","Beat":"Indira Nagar"},{"BM Mapped":"KP Pruthviraj","Outlet code":"41247","Outlet name":"41247 - Smt.V.Shashikala","Depot":"KSBCL - WHITE FIELD-2","Latitude":12.92692161,"Longitude":77.69484043,"Execution Champion Name":"R Praveen","Beat":"K R Puram"},{"BM Mapped":"Shivaraja","Outlet code":"18685","Outlet name":"18685 - J S Mohan Kumar","Depot":"KSBCL - WHITE FIELD","Latitude":13.0512696,"Longitude":77.7572292,"Execution Champion Name":"Govindraju V","Beat":"K R Puram"},{"BM Mapped":"Shivaraja","Outlet code":"42108","Outlet name":"42108-Sowbhagya DR","Depot":"KSBCL - WHITE FIELD","Latitude":12.98976,"Longitude":77.675755,"Execution Champion Name":"Govindraju V","Beat":"K R Puram"},{"BM Mapped":"Shivaraja","Outlet code":"3236","Outlet name":"3236 - Sri R.Srinivasan","Depot":"KSBCL - WHITE FIELD","Latitude":12.97757,"Longitude":77.7132677,"Execution Champion Name":"Govindraju V","Beat":"Whitefield"},{"BM Mapped":"Shivaraja","Outlet code":"43935","Outlet name":"43935-MAHESH KS","Depot":"KSBCL - WHITE FIELD","Latitude":13.04254443,"Longitude":77.71112647,"Execution Champion Name":"Govindraju V","Beat":"Whitefield"},{"BM Mapped":"Manjunatha S","Outlet code":"18412","Outlet name":"18412 - Yashashwini N G","Depot":"KSBCL - WHITE FIELD","Latitude":13.03483526,"Longitude":77.75175758,"Execution Champion Name":"Gajendra Kumar T","Beat":"Sarjapur Rd"},{"BM Mapped":"Manjunatha S","Outlet code":"13548","Outlet name":"13548 - Trishul Enterprises","Depot":"KSBCL - KOTHANUR","Latitude":13.01990456,"Longitude":77.67412774,"Execution Champion Name":"Gajendra Kumar T","Beat":"K R Puram"},{"BM Mapped":"KP Pruthviraj","Outlet code":"40351","Outlet name":"40351 - M/S-Bhagini Enterprises","Depot":"KSBCL - HONGASANDRA","Latitude":12.8991622,"Longitude":77.6585451,"Execution Champion Name":"R Praveen","Beat":"Sarjapur Rd"},{"BM Mapped":"KP Pruthviraj","Outlet code":"40558","Outlet name":"40558 - Arjun Kumar P V","Depot":"KSBCL - HONGASANDRA","Latitude":12.9686489,"Longitude":77.6062559,"Execution Champion Name":"Devaraju C","Beat":"Indira Nagar"}];
+const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat'];
+const BCOLS=['#2563eb','#16a34a','#dc2626','#d97706','#7c3aed','#0891b2','#db2777','#059669','#65a30d','#9333ea','#c2410c','#0d9488','#4f46e5'];
+const BMCOLS={'Manjunatha S':'#2563eb','KP Pruthviraj':'#16a34a','Shivaraja':'#dc2626'};
+const ECCOLS={'Madhu T R':'#2563eb','Srikantha M R':'#16a34a','Govindraju V':'#dc2626','Gajendra Kumar T':'#d97706','R Praveen':'#7c3aed','Devaraju C':'#0891b2'};
+const AVCOLS=['#2563eb','#16a34a','#dc2626','#d97706','#7c3aed','#0891b2','#db2777','#059669'];
+
+let outlets=[...RAW], team={bms:[],ecs:[]}, pjp={}, skus={}, beatCM={};
+let leafMap=null, mks={}, distLine=null, tf='all', cellTarget=null, detCode=null, editMode=false;
+
+// ══════════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════════
+function init(){
+  const bmSet=[...new Set(outlets.map(o=>o['BM Mapped']))].filter(Boolean);
+  const ecSet=[...new Set(outlets.map(o=>o['Execution Champion Name']))].filter(Boolean);
+  bmSet.forEach(b=>{if(!team.bms.find(x=>x.name===b))team.bms.push({name:b,role:'bm'})});
+  ecSet.forEach(e=>{
+    if(!team.ecs.find(x=>x.name===e)){
+      const ref=outlets.find(o=>o['Execution Champion Name']===e);
+      team.ecs.push({name:e,role:'ec',bm:ref?ref['BM Mapped']:''});
+    }
+  });
+  buildBeatColors();
+  initMap();
+  populateSelects();
+  renderOT(); renderSKUT(); renderTeam(); renderReport();
+  document.getElementById('total-count').textContent=outlets.length;
+}
+
+function buildBeatColors(){
+  const beats=[...new Set(outlets.map(o=>o.Beat))].sort();
+  beats.forEach((b,i)=>{if(!beatCM[b])beatCM[b]=BCOLS[i%BCOLS.length]});
+}
+
+function col(o,mode){
+  if(mode==='bm') return BMCOLS[o['BM Mapped']]||pickColor(o['BM Mapped']);
+  if(mode==='ec') return ECCOLS[o['Execution Champion Name']]||pickColor(o['Execution Champion Name']);
+  return beatCM[o.Beat]||'#888';
+}
+function pickColor(s){
+  let h=0;for(let i=0;i<(s||'').length;i++)h=(h*31+s.charCodeAt(i))&0xffffff;
+  return '#'+((h&0xffffff)|0x202020).toString(16).padStart(6,'0');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  MAP
+// ══════════════════════════════════════════════════════════════
+function initMap(){
+  if(leafMap){leafMap.remove();leafMap=null;}
+  leafMap=L.map('map').setView([12.97,77.70],12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(leafMap);
+  renderMarkers();
+}
+
+function renderMarkers(){
+  if(!leafMap)return;
+  Object.values(mks).forEach(m=>{try{leafMap.removeLayer(m)}catch(e){}});
+  mks={};
+  const bm=document.getElementById('mb').value;
+  const bt=document.getElementById('mbt').value;
+  const mode=document.getElementById('mcb').value;
+  const vis=outlets.filter(o=>(!bm||o['BM Mapped']===bm)&&(!bt||o.Beat===bt)&&o.Latitude&&o.Longitude&&o.Latitude!==0);
+  vis.forEach(o=>{
+    const c=col(o,mode);
+    const m=L.circleMarker([o.Latitude,o.Longitude],{radius:8,fillColor:c,color:'#fff',weight:1.5,fillOpacity:.87}).addTo(leafMap);
+    m.bindPopup(`<div style="font-size:13px"><b>${o['Outlet name']}</b><hr style="margin:5px 0;border-color:#e5e7eb"><table style="font-size:12px"><tr><td style="color:#6b7280;padding:2px 8px 2px 0">Code</td><td><b>${o['Outlet code']}</b></td></tr><tr><td style="color:#6b7280;padding:2px 8px 2px 0">Beat</td><td>${o.Beat}</td></tr><tr><td style="color:#6b7280;padding:2px 8px 2px 0">BM</td><td>${o['BM Mapped']}</td></tr><tr><td style="color:#6b7280;padding:2px 8px 2px 0">EC</td><td>${o['Execution Champion Name']}</td></tr></table></div>`);
+    m.on('mouseover',()=>showDist(o));
+    m.on('mouseout',()=>{hideDist()});
+    m.on('click',()=>{if(distModeOn){toggleDistSelect(o['Outlet code']);}else{showDetail(o['Outlet code']);}});
+    m.on('contextmenu',e=>{e.originalEvent.preventDefault();if(confirm('Delete outlet '+o['Outlet code']+'?'))deleteOutlet(o['Outlet code'])});
+    mks[o['Outlet code']]=m;
+  });
+}
+
+// ── DISTANCE MODE STATE
+let distModeOn=false;
+let distSelected=[]; // array of outlet codes
+let distLines=[];
+
+function toggleDistMode(){
+  distModeOn=!distModeOn;
+  const btn=document.getElementById('dist-mode-btn');
+  const panel=document.getElementById('dist-panel');
+  const hint=document.getElementById('dist-hint');
+  if(distModeOn){
+    btn.style.background='#2563eb';btn.style.color='#fff';btn.style.borderColor='#2563eb';
+    btn.textContent='📏 Distance Mode ON';
+    panel.style.display='flex';
+    hint.style.display='none';
+    clearDistSel();
+    setTimeout(()=>{if(leafMap)leafMap.invalidateSize();},50);
+  } else {
+    btn.style.background='';btn.style.color='';btn.style.borderColor='#d1d5db';
+    btn.textContent='📏 Distance Mode';
+    panel.style.display='none';
+    hint.style.display='';
+    clearDistSel();
+    setTimeout(()=>{if(leafMap)leafMap.invalidateSize();},50);
+  }
+}
+
+function toggleDistSelect(code){
+  const idx=distSelected.indexOf(code);
+  if(idx>=0){
+    distSelected.splice(idx,1);
+  } else {
+    distSelected.push(code);
+  }
+  updateDistMarkers();
+  renderDistResults();
+}
+
+function updateDistMarkers(){
+  // Update marker styles for selected/unselected
+  const mode=document.getElementById('mcb').value;
+  Object.entries(mks).forEach(([code,m])=>{
+    const o=outlets.find(x=>x['Outlet code']===code);
+    if(!o)return;
+    const isSelected=distSelected.includes(code);
+    if(isSelected){
+      m.setStyle({radius:12,fillColor:'#f59e0b',color:'#fff',weight:3,fillOpacity:1});
+    } else {
+      m.setStyle({radius:8,fillColor:col(o,mode),color:'#fff',weight:1.5,fillOpacity:.87});
+    }
+  });
+  // Remove old lines
+  distLines.forEach(l=>{try{leafMap.removeLayer(l)}catch(e){}});
+  distLines=[];
+  // Draw lines between all selected pairs
+  if(distSelected.length>=2){
+    for(let i=0;i<distSelected.length;i++){
+      for(let j=i+1;j<distSelected.length;j++){
+        const a=outlets.find(x=>x['Outlet code']===distSelected[i]);
+        const b=outlets.find(x=>x['Outlet code']===distSelected[j]);
+        if(a&&b&&a.Latitude&&b.Latitude){
+          const line=L.polyline([[a.Latitude,a.Longitude],[b.Latitude,b.Longitude]],
+            {color:'#f59e0b',weight:2.5,dashArray:'8,5',opacity:.9}).addTo(leafMap);
+          distLines.push(line);
+        }
+      }
+    }
+  }
+}
+
+function renderDistResults(){
+  const cnt=document.getElementById('dist-sel-count');
+  const list=document.getElementById('dist-selected-list');
+  const results=document.getElementById('dist-results');
+  cnt.textContent=distSelected.length+' selected';
+  if(distSelected.length===0){
+    list.innerHTML='<span style="color:#4d7a9a;font-size:11px">Click outlets on map...</span>';
+    results.innerHTML='';
+    return;
+  }
+  list.innerHTML=distSelected.map((code,i)=>{
+    const o=outlets.find(x=>x['Outlet code']===code);
+    return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+      <span style="background:#f59e0b;color:#000;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">${i+1}</span>
+      <div style="min-width:0">
+        <div style="color:#fff;font-size:11px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o?o['Outlet name']:code}</div>
+        <div style="color:#4d7a9a;font-size:10px">${code}</div>
+      </div>
+    </div>`;
+  }).join('');
+  if(distSelected.length<2){
+    results.innerHTML='<div style="color:#4d7a9a;font-size:11px;padding:8px;background:#1e3a5f;border-radius:6px;text-align:center">Select one more outlet to see distance</div>';
+    return;
+  }
+  let html='';
+  for(let i=0;i<distSelected.length;i++){
+    for(let j=i+1;j<distSelected.length;j++){
+      const a=outlets.find(x=>x['Outlet code']===distSelected[i]);
+      const b=outlets.find(x=>x['Outlet code']===distSelected[j]);
+      if(!a||!b||!a.Latitude||!b.Latitude)continue;
+      const d=haversine(a.Latitude,a.Longitude,b.Latitude,b.Longitude);
+      const dStr=d<1?(d*1000).toFixed(0)+' m':d.toFixed(2)+' km';
+      html+=`<div style="background:#1e3a5f;border-radius:6px;padding:10px 12px;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px">
+          <span style="background:#f59e0b;color:#000;border-radius:50%;width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700">${i+1}</span>
+          <span style="color:#6b7280;font-size:11px">↔</span>
+          <span style="background:#f59e0b;color:#000;border-radius:50%;width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700">${j+1}</span>
+        </div>
+        <div style="font-size:10px;color:#90b4cf;margin-bottom:4px;line-height:1.4">${a['Outlet name']} ↔ ${b['Outlet name']}</div>
+        <div style="font-size:20px;font-weight:700;color:#f59e0b">${dStr}</div>
+      </div>`;
+    }
+  }
+  results.innerHTML=html;
+}
+
+function clearDistSel(){
+  distSelected=[];
+  distLines.forEach(l=>{try{leafMap.removeLayer(l)}catch(e){}});
+  distLines=[];
+  // Reset marker styles
+  const mode=document.getElementById('mcb').value;
+  Object.entries(mks).forEach(([code,m])=>{
+    const o=outlets.find(x=>x['Outlet code']===code);
+    if(o)m.setStyle({radius:8,fillColor:col(o,mode),color:'#fff',weight:1.5,fillOpacity:.87});
+  });
+  renderDistResults();
+}
+
+function showDist(o){
+  if(!leafMap||distModeOn)return;
+  const di=document.getElementById('dist-info');
+  di.innerHTML=`<b>📍 ${o['Outlet name']}</b> &nbsp;<span style="font-size:11px;opacity:.8">${o['Outlet code']}</span>`;
+  di.style.display='block';
+}
+function hideDist(){
+  document.getElementById('dist-info').style.display='none';
+}
+
+function haversine(a,b,c,d){
+  const R=6371,dL=(c-a)*Math.PI/180,dl=(d-b)*Math.PI/180;
+  const x=Math.sin(dL/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dl/2)**2;
+  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+}
+
+function applyMapF(){renderMarkers();}
+
+// ══════════════════════════════════════════════════════════════
+//  OUTLET TABLE
+// ══════════════════════════════════════════════════════════════
+function renderOT(){
+  const q=(document.getElementById('o-q').value||'').toLowerCase();
+  const bm=document.getElementById('o-bm').value;
+  const bt=document.getElementById('o-beat').value;
+  const ec=document.getElementById('o-ec').value;
+  const rows=outlets.filter(o=>{
+    const nm=(o['Outlet name']||'').toLowerCase(), cd=String(o['Outlet code']||'');
+    return(!q||nm.includes(q)||cd.toLowerCase().includes(q))&&(!bm||o['BM Mapped']===bm)&&(!bt||o.Beat===bt)&&(!ec||o['Execution Champion Name']===ec);
+  });
+  document.getElementById('o-tbody').innerHTML=rows.map(o=>`
+    <tr>
+      <td><b>${o['Outlet code']}</b></td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(o['Outlet name'])}">${o['Outlet name']}</td>
+      <td><span class="badge" style="background:${beatCM[o.Beat]||'#888'}22;color:${beatCM[o.Beat]||'#888'}">${o.Beat}</span></td>
+      <td>${o['BM Mapped']}</td>
+      <td>${o['Execution Champion Name']}</td>
+      <td style="font-size:11px;color:#6b7280;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.Depot||''}</td>
+      <td>
+        <button class="btn bs sm" style="padding:4px 8px;font-size:11px" onclick='showDetail("${esc(o["Outlet code"])}")'>View</button>
+        <button class="btn bd sm" style="padding:4px 8px;font-size:11px" onclick='deleteOutlet("${esc(o["Outlet code"])}")'>Del</button>
+      </td>
+    </tr>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  OUTLET DETAIL / EDIT
+// ══════════════════════════════════════════════════════════════
+function showDetail(code){
+  const o=outlets.find(x=>x['Outlet code']===code);
+  if(!o)return;
+  detCode=code;
+  document.getElementById('dt').textContent=o['Outlet name'];
+  const skuList=(skus[code]||[]);
+  document.getElementById('db').innerHTML=`
+    <table style="width:100%;font-size:13px">
+      <tr><td style="color:#6b7280;padding:5px 0;width:130px">Code</td><td><b>${o['Outlet code']}</b></td></tr>
+      <tr><td style="color:#6b7280;padding:5px 0">Beat</td><td><span class="badge" style="background:${beatCM[o.Beat]||'#888'}22;color:${beatCM[o.Beat]||'#888'}">${o.Beat}</span></td></tr>
+      <tr><td style="color:#6b7280;padding:5px 0">BM Mapped</td><td>${o['BM Mapped']}</td></tr>
+      <tr><td style="color:#6b7280;padding:5px 0">Exec Champion</td><td>${o['Execution Champion Name']}</td></tr>
+      <tr><td style="color:#6b7280;padding:5px 0">Depot</td><td>${o.Depot||'—'}</td></tr>
+      <tr><td style="color:#6b7280;padding:5px 0">Latitude</td><td>${o.Latitude||'—'}</td></tr>
+      <tr><td style="color:#6b7280;padding:5px 0">Longitude</td><td>${o.Longitude||'—'}</td></tr>
+    </table>
+    <div style="margin-top:14px">
+      <div style="font-size:12px;font-weight:600;color:#4b5563;margin-bottom:6px">SKUs Assigned (${skuList.length})</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">${skuList.map(s=>`<span class="badge" style="background:#f3f4f6;color:#374151;border:1px solid #e5e7eb">${s}</span>`).join('')||'<span style="color:#9ca3af;font-size:12px">No SKUs assigned</span>'}</div>
+      <button class="btn bs sm" style="margin-top:10px" onclick="openSKUFor('${esc(code)}')">Manage SKUs</button>
+    </div>`;
+  openM('m-det');
+}
+
+function delOutletDetail(){
+  if(confirm('Delete outlet '+detCode+'? This cannot be undone.')){deleteOutlet(detCode);closeM('m-det');}
+}
+
+function editOutletDetail(){
+  const o=outlets.find(x=>x['Outlet code']===detCode);
+  if(!o)return;
+  closeM('m-det');
+  editMode=true;
+  document.getElementById('m-add-title').textContent='Edit Outlet';
+  document.getElementById('m-add-btn').textContent='Save Changes';
+  document.getElementById('nc').value=o['Outlet code'];
+  document.getElementById('nc').disabled=true;
+  document.getElementById('nn').value=o['Outlet name'];
+  document.getElementById('nbt').value=o.Beat;
+  document.getElementById('nbm').value=o['BM Mapped'];
+  document.getElementById('nec').value=o['Execution Champion Name'];
+  document.getElementById('ndp').value=o.Depot||'';
+  document.getElementById('nlt').value=o.Latitude||'';
+  document.getElementById('nlg').value=o.Longitude||'';
+  openM('m-add');
+}
+
+function saveOutlet(){
+  const code=document.getElementById('nc').value.trim();
+  const name=document.getElementById('nn').value.trim();
+  const bt=document.getElementById('nbt').value.trim();
+  const bm=document.getElementById('nbm').value;
+  const ec=document.getElementById('nec').value;
+  const dp=document.getElementById('ndp').value.trim();
+  const lt=parseFloat(document.getElementById('nlt').value);
+  const lg=parseFloat(document.getElementById('nlg').value);
+  if(!code||!name||!bt||!bm||!ec||isNaN(lt)||isNaN(lg))return toast('Please fill all required fields (*)','error');
+  if(editMode){
+    const idx=outlets.findIndex(o=>o['Outlet code']===code);
+    if(idx>=0)outlets[idx]={'Outlet code':code,'Outlet name':name,'Beat':bt,'BM Mapped':bm,'Execution Champion Name':ec,'Depot':dp,'Latitude':lt,'Longitude':lg};
+    toast('Outlet updated','success');
+  } else {
+    if(outlets.find(o=>o['Outlet code']===code))return toast('Outlet code already exists','error');
+    outlets.push({'Outlet code':code,'Outlet name':name,'Beat':bt,'BM Mapped':bm,'Execution Champion Name':ec,'Depot':dp,'Latitude':lt,'Longitude':lg});
+    toast('Outlet added','success');
+  }
+  if(!beatCM[bt])beatCM[bt]=BCOLS[Object.keys(beatCM).length%BCOLS.length];
+  document.getElementById('total-count').textContent=outlets.length;
+  resetAddForm();
+  closeM('m-add');
+  renderOT();renderMarkers();renderSKUT();renderPool();populateSelects();renderReport();
+}
+
+function resetAddForm(){
+  editMode=false;
+  document.getElementById('m-add-title').textContent='Add New Outlet';
+  document.getElementById('m-add-btn').textContent='Add Outlet';
+  document.getElementById('nc').disabled=false;
+  ['nc','nn','nbt','ndp','nlt','nlg'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('nbm').value='';
+  document.getElementById('nec').value='';
+}
+
+function deleteOutlet(code){
+  if(!confirm('Delete outlet '+code+'? This cannot be undone.'))return;
+  outlets=outlets.filter(o=>o['Outlet code']!==code);
+  Object.keys(pjp).forEach(k=>{pjp[k]=pjp[k].filter(c=>c!==code);});
+  delete skus[code];
+  document.getElementById('total-count').textContent=outlets.length;
+  renderOT();renderMarkers();renderSKUT();renderPool();renderReport();
+  toast('Outlet deleted');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PLANNER
+// ══════════════════════════════════════════════════════════════
+function renderPlanner(){
+  const selBM=document.getElementById('pl-bm').value;
+  const selEC=document.getElementById('pl-ec').value;
+  const wk=document.getElementById('pl-wk').value;
+  let ecs=team.ecs;
+  if(selBM) ecs=ecs.filter(e=>e.bm===selBM);
+  if(selEC) ecs=ecs.filter(e=>e.name===selEC);
+
+  let html=`<div class="pg"><div class="phd" style="background:#0f2744;color:#fff;font-size:11px">Exec Champion</div>${DAYS.map(d=>`<div class="phd">${d}</div>`).join('')}`;
+  if(!ecs.length){
+    html+=`<div style="grid-column:1/-1;padding:30px;text-align:center;color:#9ca3af;font-size:13px">No Exec Champions found for selected filters.</div>`;
+  }
+  ecs.forEach(ec=>{
+    const bmColor=BMCOLS[ec.bm]||'#888';
+    html+=`<div class="pep"><b>${ec.name}</b><span style="color:${bmColor}">${ec.bm||'No BM'}</span></div>`;
+    DAYS.forEach(d=>{
+      const key=`${wk}__${encodeKey(ec.name)}__${d}`;
+      const chips=(pjp[key]||[]);
+      html+=`<div class="pce" id="pce-${key}" ondragover="event.preventDefault();this.classList.add('dov')" ondragleave="this.classList.remove('dov')" ondrop="onDrop(event,'${key}')">`;
+      chips.forEach(c=>{
+        const o=outlets.find(x=>x['Outlet code']===c);
+        const label=o?`<span style="font-size:9px;color:#93c5fd">${c}</span> ${shortName(o['Outlet name'])}`:c;
+        html+=`<div class="chip" draggable="true" ondragstart="dragChip(event,'${c}','${key}')"><span class="cn" title="${o?esc(o['Outlet name']):c}">${label}</span><span class="chip-del" onclick="removeChip('${key}','${c}')">×</span></div>`;
+      });
+      html+=`<div class="add-btn" title="Add outlet" onclick="openCellPicker('${key}','${ec.name}','${d}')">+</div></div>`;
+    });
+  });
+  html+='</div>';
+  document.getElementById('pjp-grid-wrap').innerHTML=html;
+  renderPool();
+  updatePJPStatus();
+}
+
+function encodeKey(s){return s.replace(/ /g,'_');}
+function decodeKey(s){return s.replace(/_/g,' ');}
+function shortName(n){const p=n.split('-');return(p[1]||n).trim().substring(0,22);}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function renderPool(){
+  const q=(document.getElementById('pool-q').value||'').toLowerCase();
+  const bt=document.getElementById('pool-beat').value;
+  const bm=document.getElementById('pl-bm').value;
+  const wk=document.getElementById('pl-wk').value;
+  const usedCodes=new Set(Object.entries(pjp).filter(([k])=>k.startsWith(wk+'__')).flatMap(([,v])=>v));
+  const pool=outlets.filter(o=>{
+    const nm=(o['Outlet name']||'').toLowerCase(), cd=o['Outlet code'];
+    return(!q||nm.includes(q)||cd.toLowerCase().includes(q))&&(!bt||o.Beat===bt)&&(!bm||o['BM Mapped']===bm)&&!usedCodes.has(cd)&&o.Latitude&&o.Latitude!==0;
+  }).slice(0,100);
+  document.getElementById('pool-cnt').textContent=`(${pool.length})`;
+  document.getElementById('pool').innerHTML=pool.map(o=>`
+    <div class="pi" draggable="true" data-code="${o['Outlet code']}" ondragstart="event.dataTransfer.setData('code',this.dataset.code)" title="${esc(o['Outlet name'])}">
+      <div style="font-size:10px;color:#9ca3af">${o['Outlet code']}</div>
+      <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${shortName(o['Outlet name'])}</div>
+      <div style="display:flex;gap:4px;margin-top:3px">
+        <span style="font-size:9px;background:${beatCM[o.Beat]||'#888'}22;color:${beatCM[o.Beat]||'#888'};padding:1px 5px;border-radius:8px">${o.Beat}</span>
+      </div>
+    </div>`).join('');
+}
+
+function onDrop(e,key){
+  e.preventDefault();
+  const code=e.dataTransfer.getData('code');
+  const fromKey=e.dataTransfer.getData('from-key');
+  const el=document.getElementById('pce-'+key);
+  if(el)el.classList.remove('dov');
+  if(!code)return;
+  if(fromKey&&fromKey!==key){
+    if(pjp[fromKey])pjp[fromKey]=pjp[fromKey].filter(c=>c!==code);
+  }
+  if(!(pjp[key]||[]).includes(code)){
+    if(!pjp[key])pjp[key]=[];
+    pjp[key].push(code);
+  }
+  renderPlanner();
+}
+function dragChip(e,code,fromKey){
+  e.dataTransfer.setData('code',code);
+  e.dataTransfer.setData('from-key',fromKey);
+}
+function removeChip(key,code){
+  if(pjp[key])pjp[key]=pjp[key].filter(c=>c!==code);
+  renderPlanner();
+}
+
+function openCellPicker(key,ec,day){
+  cellTarget=key;
+  document.getElementById('m-cell-title').textContent=`Add to ${ec} — ${day}`;
+  document.getElementById('cq').value='';
+  document.getElementById('cq-beat').value='';
+  renderCL();
+  openM('m-cell');
+}
+
+function renderCL(){
+  const q=(document.getElementById('cq').value||'').toLowerCase();
+  const bt=document.getElementById('cq-beat').value;
+  const used=pjp[cellTarget]||[];
+  const rows=outlets.filter(o=>{
+    const nm=(o['Outlet name']||'').toLowerCase();
+    return(!q||nm.includes(q)||o['Outlet code'].toLowerCase().includes(q))&&(!bt||o.Beat===bt)&&!used.includes(o['Outlet code']);
+  }).slice(0,80);
+  const selDiv=document.getElementById('cl-sel-count');
+  if(selDiv)selDiv.textContent='0 selected';
+  document.getElementById('cl').innerHTML=rows.length?rows.map(o=>`
+    <label style="padding:9px 12px;border-bottom:1px solid #f1f5f9;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:10px;transition:.1s" onmouseover="this.style.background='#f0f7ff'" onmouseout="this.style.background=''">
+      <input type="checkbox" value="${o['Outlet code']}" onchange="updateCLSel()" style="width:15px;height:15px;accent-color:#2563eb;cursor:pointer;flex-shrink:0">
+      <span style="flex:1;min-width:0"><b style="color:#2563eb">${o['Outlet code']}</b> — ${o['Outlet name']}</span>
+      <span class="badge" style="background:${beatCM[o.Beat]||'#888'}22;color:${beatCM[o.Beat]||'#888'};font-size:10px;white-space:nowrap">${o.Beat}</span>
+    </label>`).join(''):`<div style="padding:20px;text-align:center;color:#9ca3af;font-size:13px">No outlets found</div>`;
+}
+
+function updateCLSel(){
+  const checked=document.querySelectorAll('#cl input[type=checkbox]:checked');
+  const selDiv=document.getElementById('cl-sel-count');
+  if(selDiv)selDiv.textContent=checked.length+' selected';
+}
+
+function addSelectedToCell(){
+  const checked=document.querySelectorAll('#cl input[type=checkbox]:checked');
+  if(!checked.length)return toast('Koi outlet select nahi kiya','error');
+  if(!pjp[cellTarget])pjp[cellTarget]=[];
+  let added=0;
+  checked.forEach(cb=>{
+    if(!pjp[cellTarget].includes(cb.value)){pjp[cellTarget].push(cb.value);added++;}
+  });
+  renderPlanner();
+  closeM('m-cell');
+  toast(added+' outlet(s) added ✓','success');
+}
+
+function addToCell(code){
+  if(!pjp[cellTarget])pjp[cellTarget]=[];
+  if(!pjp[cellTarget].includes(code))pjp[cellTarget].push(code);
+  renderPlanner();
+  closeM('m-cell');
+  toast('Outlet added to plan ✓','success');
+}
+
+function clearPlanner(){
+  const wk=document.getElementById('pl-wk').value;
+  if(!confirm('Clear all outlets for Week '+wk+'?'))return;
+  Object.keys(pjp).filter(k=>k.startsWith(wk+'__')).forEach(k=>delete pjp[k]);
+  renderPlanner();
+  toast('Week '+wk+' cleared');
+}
+
+function finalizePJP(){
+  const total=Object.values(pjp).reduce((a,b)=>a+b.length,0);
+  if(!total)return toast('No outlets scheduled yet!','error');
+  toast('PJP Finalized! '+total+' outlet visits planned ✓','success');
+  document.getElementById('sb-pjp-status').textContent=total+' visits planned';
+  showTab('report');
+}
+
+function updatePJPStatus(){
+  const total=Object.values(pjp).reduce((a,b)=>a+b.length,0);
+  document.getElementById('sb-pjp-status').textContent=total?total+' visits planned':'';
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TEAM
+// ══════════════════════════════════════════════════════════════
+function renderTeam(){
+  const all=[...team.bms,...team.ecs];
+  const filtered=tf==='all'?all:tf==='bm'?team.bms:team.ecs;
+  document.getElementById('team-grid').innerHTML=filtered.map((p,i)=>{
+    const ini=p.name.split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2);
+    const c=AVCOLS[i%AVCOLS.length];
+    const outletCnt=outlets.filter(o=>o['BM Mapped']===p.name||o['Execution Champion Name']===p.name).length;
+    const planned=Object.values(pjp).reduce((a,v)=>{
+      const ecOutlets=outlets.filter(o=>o['Execution Champion Name']===p.name).map(o=>o['Outlet code']);
+      return a+v.filter(c=>ecOutlets.includes(c)).length;
+    },0);
+    return `<div class="tcard">
+      <button class="btn bd sm" style="position:absolute;top:10px;right:10px;padding:3px 8px;font-size:11px" onclick="deleteEmp('${esc(p.name)}','${p.role}')">Del</button>
+      <div class="tav" style="background:${c}">${ini}</div>
+      <div style="font-size:14px;font-weight:600;color:#111827">${p.name}</div>
+      <div style="font-size:11px;color:#6b7280;margin-top:2px">${p.role==='bm'?'Business Manager':'Exec Champion'}</div>
+      ${p.bm?`<div style="font-size:11px;color:#2563eb;margin-top:4px;font-weight:500">Under: ${p.bm}</div>`:''}
+      <div style="margin-top:10px;display:flex;gap:10px">
+        <div style="font-size:11px"><div style="color:#9ca3af">Outlets</div><div style="font-weight:600;font-size:16px;color:#111827">${outletCnt}</div></div>
+        ${planned?`<div style="font-size:11px"><div style="color:#9ca3af">PJP Visits</div><div style="font-weight:600;font-size:16px;color:#2563eb">${planned}</div></div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setTF(v){
+  tf=v;
+  ['all','bm','ec'].forEach(x=>{
+    document.getElementById('tf-'+x).className='btn bs sm';
+  });
+  document.getElementById('tf-'+v).className='btn bp sm';
+  renderTeam();
+}
+
+function addEmployee(){
+  const n=document.getElementById('en').value.trim();
+  const r=document.getElementById('er').value;
+  const b=document.getElementById('ebs').value;
+  if(!n)return toast('Enter employee name','error');
+  if(r==='bm'){
+    if(team.bms.find(x=>x.name===n))return toast('BM already exists','error');
+    team.bms.push({name:n,role:'bm'});
+    populateSelects();
+  } else {
+    if(team.ecs.find(x=>x.name===n))return toast('EC already exists','error');
+    team.ecs.push({name:n,role:'ec',bm:b});
+  }
+  closeM('m-emp');
+  document.getElementById('en').value='';
+  document.getElementById('ebs').value='';
+  renderTeam();renderPlanner();
+  toast('Employee added','success');
+}
+
+function deleteEmp(name,role){
+  if(!confirm('Remove '+name+' from team?'))return;
+  if(role==='bm')team.bms=team.bms.filter(x=>x.name!==name);
+  else team.ecs=team.ecs.filter(x=>x.name!==name);
+  populateSelects();renderTeam();renderPlanner();
+  toast(name+' removed');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SKU MANAGER
+// ══════════════════════════════════════════════════════════════
+function renderSKUT(){
+  const q=(document.getElementById('sku-q').value||'').toLowerCase();
+  const bt=document.getElementById('sku-beat').value;
+  const rows=outlets.filter(o=>(!q||(o['Outlet name']||'').toLowerCase().includes(q)||o['Outlet code'].toLowerCase().includes(q))&&(!bt||o.Beat===bt));
+  document.getElementById('sku-tbody').innerHTML=rows.map(o=>{
+    const list=skus[o['Outlet code']]||[];
+    return `<tr>
+      <td><b>${o['Outlet code']}</b></td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o['Outlet name']}</td>
+      <td><span class="badge" style="background:${beatCM[o.Beat]||'#888'}22;color:${beatCM[o.Beat]||'#888'}">${o.Beat}</span></td>
+      <td style="max-width:250px">${list.length?list.map(s=>`<span class="sku-tag" style="background:#eff6ff;border-color:#bfdbfe;color:#1e40af">${s}</span>`).join(''):'<span style="color:#d1d5db;font-size:11px">None assigned</span>'}</td>
+      <td><button class="btn bs sm" data-code="${o['Outlet code']}" onclick="openSKUFor(this.dataset.code)">Manage</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function openSKUFor(code){
+  const o=outlets.find(x=>x['Outlet code']===code);
+  if(!o)return;
+  document.getElementById('sm-name').textContent=o['Outlet name'];
+  document.getElementById('m-sku').dataset.code=code;
+  renderSKUList(code);
+  closeM('m-det');
+  openM('m-sku');
+}
+
+function renderSKUList(code){
+  const list=skus[code]||[];
+  document.getElementById('skl').innerHTML=list.length?list.map(s=>`
+    <span class="sku-tag" style="background:#eff6ff;border-color:#bfdbfe;color:#1e40af">
+      ${s}<span class="sku-del" data-code="${code}" data-sku="${esc(s)}" onclick="removeSKU(this.dataset.code,this.dataset.sku)">×</span>
+    </span>`).join(''):'<span style="color:#9ca3af;font-size:12px">No SKUs assigned yet. Add one above.</span>';
+}
+
+function addSKU(){
+  const code=document.getElementById('m-sku').dataset.code;
+  const val=document.getElementById('si').value.trim();
+  if(!val)return;
+  if(!skus[code])skus[code]=[];
+  if(skus[code].includes(val)){toast('SKU already added','error');return;}
+  skus[code].push(val);
+  document.getElementById('si').value='';
+  renderSKUList(code);renderSKUT();
+  toast('SKU added','success');
+}
+
+function removeSKU(code,s){
+  skus[code]=(skus[code]||[]).filter(x=>x!==s);
+  renderSKUList(code);renderSKUT();
+}
+
+function exportSKU(){
+  const rows=[['Outlet Code','Outlet Name','Beat','BM Mapped','EC','SKUs'],...outlets.map(o=>[o['Outlet code'],o['Outlet name'],o.Beat,o['BM Mapped'],o['Execution Champion Name'],(skus[o['Outlet code']]||[]).join(' | ')])];
+  dlCSV(rows,'sku_list.csv');toast('SKU list exported','success');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  POPULATE SELECTS
+// ══════════════════════════════════════════════════════════════
+function populateSelects(){
+  const bms=[...new Set(team.bms.map(b=>b.name))].sort();
+  const ecs=[...new Set(team.ecs.map(e=>e.name))].sort();
+  const beats=[...new Set(outlets.map(o=>o.Beat))].filter(Boolean).sort();
+  const depots=[...new Set(outlets.map(o=>o.Depot))].filter(Boolean).sort();
+
+  function setSelect(id,opts,allLabel,preserve){
+    const el=document.getElementById(id);
+    if(!el)return;
+    const v=preserve?el.value:'';
+    el.innerHTML=`<option value="">${allLabel}</option>`+opts.map(x=>`<option>${x}</option>`).join('');
+    if(preserve&&v)el.value=v;
+  }
+  ['mb','o-bm','pl-bm'].forEach(id=>setSelect(id,bms,'All BMs',true));
+  ['o-ec','pl-ec'].forEach(id=>setSelect(id,ecs,'All ECs',true));
+  ['mbt','o-beat','pool-beat','sku-beat','cq-beat'].forEach(id=>setSelect(id,beats,'All Beats',true));
+  setSelect('nbm',bms,'Select BM *',false);
+  setSelect('ebs',bms,'Select BM',false);
+  setSelect('nec',ecs,'Select EC *',false);
+  const bl=document.getElementById('bl');
+  if(bl)bl.innerHTML=beats.map(b=>`<option>${b}</option>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  REPORTS
+// ══════════════════════════════════════════════════════════════
+function renderReport(){
+  const bmSet=[...new Set(outlets.map(o=>o['BM Mapped']))];
+  const ecSet=[...new Set(outlets.map(o=>o['Execution Champion Name']))];
+  const beatSet=[...new Set(outlets.map(o=>o.Beat))];
+  document.getElementById('r-o').textContent=outlets.length;
+  document.getElementById('r-b').textContent=bmSet.length;
+  document.getElementById('r-e').textContent=ecSet.length;
+  document.getElementById('r-bt').textContent=beatSet.length;
+
+  // Beat summary
+  document.getElementById('beat-tbody').innerHTML=beatSet.sort().map(b=>{
+    const bo=outlets.filter(o=>o.Beat===b);
+    const bms=[...new Set(bo.map(o=>o['BM Mapped']))].join(', ');
+    const ecs=[...new Set(bo.map(o=>o['Execution Champion Name']))].join(', ');
+    return `<tr><td><span class="badge" style="background:${beatCM[b]||'#888'}22;color:${beatCM[b]||'#888'}">${b}</span></td><td><b>${bo.length}</b></td><td style="font-size:12px">${bms}</td><td style="font-size:12px">${ecs}</td></tr>`;
+  }).join('');
+
+  // BM summary
+  document.getElementById('bm-tbody').innerHTML=bmSet.sort().map(b=>{
+    const bo=outlets.filter(o=>o['BM Mapped']===b);
+    const bts=[...new Set(bo.map(o=>o.Beat))].join(', ');
+    const ecs=[...new Set(bo.map(o=>o['Execution Champion Name']))].join(', ');
+    return `<tr><td><b>${b}</b></td><td>${bo.length}</td><td style="font-size:12px">${bts}</td><td style="font-size:12px">${ecs}</td></tr>`;
+  }).join('');
+
+  // EC summary
+  document.getElementById('ec-tbody').innerHTML=ecSet.sort().map(e=>{
+    const eo=outlets.filter(o=>o['Execution Champion Name']===e);
+    const bm=eo[0]?.['BM Mapped']||'—';
+    const beats=[...new Set(eo.map(o=>o.Beat))].join(', ');
+    const planned=Object.values(pjp).reduce((a,v)=>a+v.filter(c=>eo.map(o=>o['Outlet code']).includes(c)).length,0);
+    return `<tr><td><b>${e}</b></td><td>${bm}</td><td>${eo.length}</td><td style="font-size:12px">${beats}</td><td>${planned?`<span style="color:#2563eb;font-weight:600">${planned}</span>`:'—'}</td></tr>`;
+  }).join('');
+
+  // PJP Sections
+  const hasPJP=Object.values(pjp).some(v=>v.length>0);
+  const ps=document.getElementById('pjp-sections');
+  if(hasPJP){
+    let html=`<div class="rc"><h3>📋 PJP Schedule (Finalized)</h3>`;
+    [1,2,3,4].forEach(wk=>{
+      const wkHasData=team.ecs.some(ec=>DAYS.some(d=>(pjp[`${wk}__${encodeKey(ec.name)}__${d}`]||[]).length>0));
+      if(!wkHasData)return;
+      html+=`<div style="margin-bottom:20px"><div style="background:#0f2744;color:#fff;padding:5px 12px;border-radius:5px;font-size:11px;font-weight:700;letter-spacing:.5px;display:inline-block;margin-bottom:10px">WEEK ${wk}</div>
+      <div style="overflow-x:auto"><table style="min-width:700px">
+      <thead><tr><th style="width:140px">Exec Champion</th>${DAYS.map(d=>`<th>${d}</th>`).join('')}<th>Total</th></tr></thead>
+      <tbody>${team.ecs.map(ec=>{
+        const dayCells=DAYS.map(d=>{
+          const key=`${wk}__${encodeKey(ec.name)}__${d}`;
+          const codes=pjp[key]||[];
+          return {d,codes};
+        });
+        const total=dayCells.reduce((a,x)=>a+x.codes.length,0);
+        if(!total)return'';
+        return`<tr><td style="font-weight:600;font-size:12px">${ec.name}<br><span style="font-weight:400;color:#6b7280;font-size:10px">${ec.bm}</span></td>
+          ${dayCells.map(({codes})=>`<td style="font-size:11px;min-width:80px">${codes.map(c=>{
+            const o=outlets.find(x=>x['Outlet code']===c);
+            return`<div style="background:#eff6ff;color:#1e40af;border-radius:3px;padding:2px 5px;margin:1px;font-size:10px" title="${o?esc(o['Outlet name']):c}">${c}</div>`;
+          }).join('')||'<span style="color:#d1d5db">—</span>'}</td>`).join('')}
+          <td style="font-weight:600;color:#2563eb">${total}</td></tr>`;
+      }).join('')}</tbody></table></div></div>`;
+    });
+    html+='</div>';
+    ps.innerHTML=html;
+  } else {
+    ps.innerHTML='<div class="rc" style="color:#9ca3af;font-size:13px;text-align:center;padding:30px">No PJP scheduled yet. Go to PJP Planner to assign outlets.</div>';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  IMPORT
+// ══════════════════════════════════════════════════════════════
+function dropFile(e,type){
+  e.preventDefault();
+  document.getElementById('uz-'+(type==='outlet'?'outlet':'emp')).classList.remove('drag-active');
+  const file=e.dataTransfer.files[0];
+  if(!file)return;
+  if(type==='outlet')processFileO(file);
+  else processFileE(file);
+}
+
+function importO(e){const f=e.target.files[0];if(f)processFileO(f);}
+function importE(e){const f=e.target.files[0];if(f)processFileE(f);}
+
+function processFileO(file){
+  const ext=file.name.split('.').pop().toLowerCase();
+  if(ext==='csv'){Papa.parse(file,{header:true,skipEmptyLines:true,complete:r=>processImportedO(r.data)});}
+  else{const rd=new FileReader();rd.onload=ev=>{const wb=XLSX.read(ev.target.result,{type:'binary'});processImportedO(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]))};rd.readAsBinaryString(file);}
+}
+function processFileE(file){
+  const ext=file.name.split('.').pop().toLowerCase();
+  if(ext==='csv'){Papa.parse(file,{header:true,skipEmptyLines:true,complete:r=>processImportedE(r.data)});}
+  else{const rd=new FileReader();rd.onload=ev=>{const wb=XLSX.read(ev.target.result,{type:'binary'});processImportedE(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]))};rd.readAsBinaryString(file);}
+}
+
+function processImportedO(rows){
+  let added=0,skipped=0,errors=0;
+  rows.forEach(r=>{
+    const code=String(r['Outlet code']||r['outlet_code']||r['Code']||'').trim();
+    if(!code){errors++;return;}
+    if(outlets.find(o=>o['Outlet code']===code)){skipped++;return;}
+    const bt=String(r['Beat']||r['beat']||'Unknown').trim()||'Unknown';
+    if(!beatCM[bt])beatCM[bt]=BCOLS[Object.keys(beatCM).length%BCOLS.length];
+    outlets.push({'Outlet code':code,'Outlet name':r['Outlet name']||r['outlet_name']||code,
+      'Beat':bt,'BM Mapped':r['BM Mapped']||r['bm_mapped']||'',
+      'Execution Champion Name':r['Execution Champion Name']||r['ec_name']||'',
+      'Depot':r['Depot']||r['depot']||'','Latitude':parseFloat(r['Latitude']||r['lat'])||0,'Longitude':parseFloat(r['Longitude']||r['lng'])||0});
+    added++;
+  });
+  document.getElementById('o-imp-res').innerHTML=`<div style="padding:10px;background:${added?'#f0fdf4':'#fafafa'};border-radius:6px;border:1px solid ${added?'#bbf7d0':'#e5e7eb'}">✅ Added: <b>${added}</b> &nbsp;⏭ Skipped (duplicate): <b>${skipped}</b>${errors?` &nbsp;⚠ Errors: <b>${errors}</b>`:''}</div>`;
+  document.getElementById('total-count').textContent=outlets.length;
+  renderOT();renderMarkers();renderSKUT();renderPool();populateSelects();renderReport();
+  toast(`Imported ${added} outlets`,'success');
+}
+
+function processImportedE(rows){
+  let a=0;
+  rows.forEach(r=>{
+    const n=(r.Name||r.name||'').trim();
+    const role=(r.Role||r.role||'ec').toLowerCase().includes('bm')?'bm':'ec';
+    if(!n)return;
+    if(role==='bm'&&!team.bms.find(x=>x.name===n)){team.bms.push({name:n,role:'bm'});a++;}
+    else if(role==='ec'&&!team.ecs.find(x=>x.name===n)){team.ecs.push({name:n,role:'ec',bm:r['BM Mapped']||r['bm_mapped']||''});a++;}
+  });
+  document.getElementById('e-imp-res').innerHTML=`<div style="padding:10px;background:#f0fdf4;border-radius:6px;border:1px solid #bbf7d0">✅ Added: <b>${a}</b> employees</div>`;
+  populateSelects();renderTeam();renderPlanner();
+  toast(`Imported ${a} employees`,'success');
+}
+
+function dlOTemplate(){
+  dlCSV([['Outlet code','Outlet name','Latitude','Longitude','Beat','BM Mapped','Execution Champion Name','Depot'],
+    ['99001','99001-Sample Bar & Restaurant','12.9716','77.5946','Whitefield','Manjunatha S','Madhu T R','KSBCL - WHITE FIELD'],
+    ['99002','99002-Another Wine Shop','12.9800','77.6000','KR Puram','Shivaraja','Govindraju V','KSBCL - WHITE FIELD']],'outlet_import_template.csv');
+  toast('Template downloaded');
+}
+function dlETemplate(){
+  dlCSV([['Name','Role','BM Mapped'],['Ravi Kumar','EC','Manjunatha S'],['Prasad M','BM','']],'employee_import_template.csv');
+  toast('Template downloaded');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  EXPORT / DOWNLOAD
+// ══════════════════════════════════════════════════════════════
+function exportOutlets(){
+  const rows=[['Outlet code','Outlet name','Beat','BM Mapped','Execution Champion Name','Depot','Latitude','Longitude','SKUs'],
+    ...outlets.map(o=>[o['Outlet code'],o['Outlet name'],o.Beat,o['BM Mapped'],o['Execution Champion Name'],o.Depot||'',o.Latitude||'',o.Longitude||'',(skus[o['Outlet code']]||[]).join('|')])];
+  dlCSV(rows,'outlets_export.csv');
+  toast('Outlet list exported','success');
+}
+
+function dlPJP(){
+  const wb=XLSX.utils.book_new();
+  // ── Summary Sheet
+  const sum=[['BM','Total Outlets','Beats Covered','Exec Champions']];
+  [...new Set(outlets.map(o=>o['BM Mapped']))].sort().forEach(b=>{
+    const bo=outlets.filter(o=>o['BM Mapped']===b);
+    sum.push([b,bo.length,[...new Set(bo.map(o=>o.Beat))].join(', '),[...new Set(bo.map(o=>o['Execution Champion Name']))].join(', ')]);
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sum),'Summary');
+  // ── Week Sheets — each outlet on a separate row for easy filtering
+  [1,2,3,4].forEach(wk=>{
+    const rows=[['Week','Exec Champion','BM','Day','Outlet Code','Outlet Name','Beat','BM Mapped','EC']];
+    team.ecs.forEach(ec=>{
+      DAYS.forEach(d=>{
+        const codes=pjp[`${wk}__${encodeKey(ec.name)}__${d}`]||[];
+        if(codes.length===0){
+          rows.push([wk,ec.name,ec.bm,d,'','','','','']);
+        } else {
+          codes.forEach(c=>{
+            const o=outlets.find(x=>x['Outlet code']===c);
+            rows.push([wk,ec.name,ec.bm,d,c,o?o['Outlet name']:'',o?o.Beat:'',o?o['BM Mapped']:'',o?o['Execution Champion Name']:'']);
+          });
+        }
+      });
+    });
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:8},{wch:22},{wch:18},{wch:8},{wch:12},{wch:35},{wch:18},{wch:18},{wch:22}];
+    XLSX.utils.book_append_sheet(wb,ws,'Week '+wk);
+  });
+  // ── Outlet Details Sheet
+  const od=[['Outlet Code','Outlet Name','Beat','BM Mapped','EC','Depot','Latitude','Longitude','SKUs'],
+    ...outlets.map(o=>[o['Outlet code'],o['Outlet name'],o.Beat,o['BM Mapped'],o['Execution Champion Name'],o.Depot||'',o.Latitude||'',o.Longitude||'',(skus[o['Outlet code']]||[]).join(' | ')])];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(od),'Outlet Details');
+  // ── EC Summary Sheet
+  const es=[['EC Name','BM','Total Outlets','Beats','Mon Visits','Tue Visits','Wed Visits','Thu Visits','Fri Visits','Sat Visits']];
+  team.ecs.forEach(ec=>{
+    const eo=outlets.filter(o=>o['Execution Champion Name']===ec.name);
+    const daySums=DAYS.map(d=>{
+      let s=0;[1,2,3,4].forEach(wk=>{s+=(pjp[`${wk}__${encodeKey(ec.name)}__${d}`]||[]).length});return s;
+    });
+    es.push([ec.name,ec.bm,eo.length,[...new Set(eo.map(o=>o.Beat))].join(', '),...daySums]);
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(es),'EC Summary');
+  XLSX.writeFile(wb,'PJP_Report_KSBCL.xlsx');
+  toast('PJP Report downloaded ✓','success');
+}
+
+function dlCSV(rows,fn){
+  const BOM='\uFEFF';
+  const csv=BOM+rows.map(r=>r.map(v=>{const s=String(v==null?'':v);return s.includes(',')||s.includes('"')||s.includes('\n')?'"'+s.replace(/"/g,'""')+'"':s;}).join(',')).join('\r\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=fn;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  MODAL / TAB / UI HELPERS
+// ══════════════════════════════════════════════════════════════
+function openM(id){document.getElementById(id).classList.add('open');}
+function closeM(id){document.getElementById(id).classList.remove('open');}
+
+document.addEventListener('click',e=>{
+  if(e.target.classList.contains('mo'))e.target.classList.remove('open');
+});
+window.addEventListener('keydown',e=>{
+  if(e.key==='Escape')document.querySelectorAll('.mo.open').forEach(m=>m.classList.remove('open'));
+});
+
+function showTab(t){
+  document.querySelectorAll('.tc').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  document.querySelector(`.ni[data-tab="${t}"]`)?.classList.add('active');
+  if(t==='map'){setTimeout(()=>{if(leafMap)leafMap.invalidateSize();},120);}
+  if(t==='planner')renderPlanner();
+  if(t==='report'){renderReport();}
+}
+
+function toast(msg,type=''){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.className='toast'+(type?' '+type:'');
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t=setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  DRAG-DROP FOR FILE UPLOAD ZONES
+// ══════════════════════════════════════════════════════════════
+// Handled inline via ondrop in HTML
+
+// ══════════════════════════════════════════════════════════════
+//  BOOT
+// ══════════════════════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>
