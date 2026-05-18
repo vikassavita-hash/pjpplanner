@@ -1,4 +1,3 @@
-<html>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -110,6 +109,7 @@ tr:hover td{background:#f8fafc}
     <div class="ni" data-tab="team" onclick="showTab('team')">👥 Team</div>
     <div class="ni" data-tab="sku" onclick="showTab('sku')">📦 SKU Manager</div>
     <div class="ng">Tools</div>
+    <div class="ni" data-tab="optimizer" onclick="showTab('optimizer')">🧭 Route Optimizer</div>
     <div class="ni" data-tab="import" onclick="showTab('import')">📥 Bulk Import</div>
     <div class="ni" data-tab="report" onclick="showTab('report')">📊 Reports</div>
   </nav>
@@ -250,6 +250,65 @@ tr:hover td{background:#f8fafc}
   </div>
 </div>
 
+<!-- ROUTE OPTIMIZER TAB -->
+<div class="tc" id="tab-optimizer">
+  <div class="topbar">
+    <h2>🧭 Route Optimizer</h2>
+    <div class="ta">
+      <select id="ro-bm" onchange="roFilterOutlets()" style="padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px"><option value="">All BMs</option></select>
+      <select id="ro-beat" onchange="roFilterOutlets()" style="padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px"><option value="">All Beats</option></select>
+      <select id="ro-ec" onchange="roFilterOutlets()" style="padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px"><option value="">All ECs</option></select>
+      <button class="btn bp sm" onclick="runOptimizer()">🧭 Optimize Route</button>
+      <button class="btn bs sm" onclick="roClearSel()">✕ Clear</button>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;overflow:hidden;gap:0">
+
+    <!-- LEFT: outlet picker -->
+    <div style="width:280px;flex-shrink:0;border-right:1px solid #e5e7eb;background:#fff;display:flex;flex-direction:column">
+      <div style="padding:10px 12px 6px;border-bottom:1px solid #f1f5f9">
+        <div style="font-size:12px;font-weight:600;color:#4b5563;margin-bottom:6px">Select Outlets <span id="ro-sel-cnt" style="color:#3b82f6;font-weight:700"></span></div>
+        <input id="ro-q" type="text" placeholder="Search name / code..." oninput="roFilterOutlets()" style="width:100%;padding:6px 8px;border:1px solid #d1d5db;border-radius:5px;font-size:12px;outline:none;box-sizing:border-box">
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button class="btn bs sm" style="flex:1;font-size:11px" onclick="roSelectAll()">Select All</button>
+          <button class="btn bs sm" style="flex:1;font-size:11px" onclick="roClearSel()">Clear All</button>
+        </div>
+      </div>
+      <div id="ro-list" style="flex:1;overflow-y:auto;padding:4px 0"></div>
+    </div>
+
+    <!-- MIDDLE: optimized result -->
+    <div style="width:320px;flex-shrink:0;border-right:1px solid #e5e7eb;background:#f8fafc;display:flex;flex-direction:column">
+      <div style="padding:10px 14px 8px;border-bottom:1px solid #e5e7eb;background:#fff">
+        <div style="font-size:12px;font-weight:700;color:#111827">📍 Optimized Route</div>
+        <div id="ro-summary" style="font-size:11px;color:#6b7280;margin-top:2px">Select outlets → click Optimize</div>
+      </div>
+      <div id="ro-result" style="flex:1;overflow-y:auto;padding:10px 12px"></div>
+      <!-- Send to Planner -->
+      <div style="padding:10px 12px;border-top:1px solid #e5e7eb;background:#fff">
+        <div style="font-size:11px;font-weight:600;color:#4b5563;margin-bottom:6px">Send optimized route to PJP Planner</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <select id="ro-send-ec" style="flex:1;padding:6px 8px;border:1px solid #d1d5db;border-radius:5px;font-size:12px;outline:none"><option value="">Select EC</option></select>
+          <select id="ro-send-wk" style="padding:6px 8px;border:1px solid #d1d5db;border-radius:5px;font-size:12px;outline:none">
+            <option value="1">Week 1</option><option value="2">Week 2</option><option value="3">Week 3</option><option value="4">Week 4</option>
+          </select>
+          <select id="ro-send-day" style="padding:6px 8px;border:1px solid #d1d5db;border-radius:5px;font-size:12px;outline:none">
+            <option>Mon</option><option>Tue</option><option>Wed</option><option>Thu</option><option>Fri</option><option>Sat</option>
+          </select>
+        </div>
+        <button class="btn bg sm" style="width:100%;margin-top:6px;justify-content:center" onclick="roSendToPlanner()">✓ Add to PJP Planner</button>
+      </div>
+    </div>
+
+    <!-- RIGHT: map preview -->
+    <div style="flex:1;position:relative;min-width:0">
+      <div id="ro-map" style="width:100%;height:100%"></div>
+      <div id="ro-map-hint" style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(15,39,68,.85);color:#fff;padding:6px 14px;border-radius:16px;font-size:11px;pointer-events:none;white-space:nowrap">Optimized route will appear here</div>
+    </div>
+
+  </div>
+</div>
+
 <!-- IMPORT TAB -->
 <div class="tc" id="tab-import">
   <div class="topbar"><h2>📥 Bulk Import</h2></div>
@@ -280,6 +339,54 @@ tr:hover td{background:#f8fafc}
         <button class="btn bs sm" onclick="dlETemplate()">↓ Template</button>
       </div>
     </div>
+
+    <!-- PJP PLAN IMPORT CARD — full width -->
+    <div class="rc" style="grid-column:1/-1">
+      <h3>📅 Import PJP Day-Wise Plan (Excel / CSV) + Auto Route Optimize</h3>
+      <p style="font-size:12px;color:#6b7280;margin-bottom:12px">
+        Excel mein har outlet ke samne <b>Mon, Tue, Wed, Thu, Fri, Sat</b> column mein <b>1</b> (visit) ya <b>0</b> (skip) likho.
+        Upload ke baad system har din ke outlets ko <b>nearest-neighbour algorithm</b> se optimize karke PJP Planner mein automatically daal dega.
+        <br>Optional column: <b>EC Name</b> — agar file mein EC ka naam ho to wahi use hoga, warna neeche select karo.
+      </p>
+
+      <!-- Settings row -->
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:flex-end">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:#4b5563;margin-bottom:4px">Week</div>
+          <select id="pjpi-wk" style="padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;outline:none">
+            <option value="1">Week 1</option><option value="2">Week 2</option>
+            <option value="3">Week 3</option><option value="4">Week 4</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:#4b5563;margin-bottom:4px">Default EC (if not in file)</div>
+          <select id="pjpi-ec" style="padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;outline:none;min-width:200px">
+            <option value="">— Select EC —</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+          <input type="checkbox" id="pjpi-overwrite" style="accent-color:#2563eb;width:14px;height:14px">
+          <label for="pjpi-overwrite" style="font-size:12px;color:#4b5563;cursor:pointer">Existing plan overwrite karo (same week/day)</label>
+        </div>
+      </div>
+
+      <!-- Drop zone -->
+      <div class="uz" id="uz-pjp" ondragover="event.preventDefault();this.classList.add('drag-active')" ondragleave="this.classList.remove('drag-active')" ondrop="dropFile(event,'pjp')" onclick="document.getElementById('pjpf').click()">
+        <div style="font-size:32px">📅</div>
+        <p style="color:#6b7280;font-size:13px;margin-top:8px">Click or drag & drop PJP Plan .xlsx / .xls / .csv</p>
+        <p style="color:#9ca3af;font-size:11px;margin-top:4px">Columns: <code>Outlet Code | Mon | Tue | Wed | Thu | Fri | Sat</code> (optional: <code>EC Name</code>)</p>
+      </div>
+      <input type="file" id="pjpf" accept=".csv,.xlsx,.xls" style="display:none" onchange="importPJP(event)">
+
+      <!-- Result area -->
+      <div id="pjp-imp-res" style="margin-top:12px"></div>
+
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn bs sm" onclick="dlPJPTemplate()">↓ Download Template</button>
+        <button class="btn bp sm" id="pjp-imp-go-btn" style="display:none" onclick="showTab('planner')">→ PJP Planner dekho</button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -923,6 +1030,13 @@ function populateSelects(){
   ['o-ec','pl-ec'].forEach(id=>setSelect(id,ecs,'All ECs',true));
   ['mbt','o-beat','pool-beat','sku-beat','cq-beat'].forEach(id=>setSelect(id,beats,'All Beats',true));
   setSelect('nbm',bms,'Select BM *',false);setSelect('ebs',bms,'Select BM',false);setSelect('nec',ecs,'Select EC *',false);
+  // Route optimizer selects
+  setSelect('ro-bm',bms,'All BMs',true);
+  setSelect('ro-beat',beats,'All Beats',true);
+  setSelect('ro-ec',ecs,'All ECs',true);
+  setSelect('ro-send-ec',ecs,'Select EC',false);
+  // PJP import EC
+  setSelect('pjpi-ec',ecs,'— Select EC —',true);
   const bl=document.getElementById('bl');if(bl)bl.innerHTML=beats.map(b=>`<option>${b}</option>`).join('');
 }
 
@@ -987,9 +1101,11 @@ function renderReport(){
 // ── IMPORT
 function dropFile(e,type){
   e.preventDefault();
-  document.getElementById('uz-'+(type==='outlet'?'outlet':'emp')).classList.remove('drag-active');
+  document.getElementById('uz-'+(type==='outlet'?'outlet':type==='emp'?'emp':'pjp')).classList.remove('drag-active');
   const file=e.dataTransfer.files[0];if(!file)return;
-  if(type==='outlet')processFileO(file);else processFileE(file);
+  if(type==='outlet')processFileO(file);
+  else if(type==='emp')processFileE(file);
+  else processPJPFile(file);
 }
 function importO(e){const f=e.target.files[0];if(f)processFileO(f);}
 function importE(e){const f=e.target.files[0];if(f)processFileE(f);}
@@ -1141,6 +1257,10 @@ function showTab(t){
   document.getElementById('tab-'+t).classList.add('active');
   document.querySelector(`.ni[data-tab="${t}"]`)?.classList.add('active');
   if(t==='map'){setTimeout(()=>{if(leafMap)leafMap.invalidateSize();},120);}
+  if(t==='optimizer'){
+    setTimeout(()=>{roInit();roMapInst.invalidateSize();},120);
+    roFilterOutlets();
+  }
   if(t==='planner')renderPlanner();
   if(t==='report'){renderReport();}
 }
@@ -1149,6 +1269,440 @@ function toast(msg,type=''){
   const el=document.getElementById('toast');
   el.textContent=msg;el.className='toast'+(type?' '+type:'');el.classList.add('show');
   clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  ROUTE OPTIMIZER
+// ══════════════════════════════════════════════════════════════
+let roSelected = new Set();   // outlet codes selected
+let roOptimized = [];         // ordered outlet codes after optimization
+let roMapInst = null;         // leaflet map for optimizer tab
+let roMapLayers = [];         // lines + markers on ro map
+
+function roInit(){
+  if(roMapInst) return;
+  roMapInst = L.map('ro-map').setView([12.97, 77.70], 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(roMapInst);
+}
+
+function roFilterOutlets(){
+  const q = (document.getElementById('ro-q').value||'').toLowerCase();
+  const bm = document.getElementById('ro-bm').value;
+  const bt = document.getElementById('ro-beat').value;
+  const ec = document.getElementById('ro-ec').value;
+  const filtered = outlets.filter(o=>{
+    const nm = (o['Outlet name']||'').toLowerCase();
+    return o.Latitude && o.Latitude!==0
+      && (!q || nm.includes(q) || o['Outlet code'].toLowerCase().includes(q))
+      && (!bm || o['BM Mapped']===bm)
+      && (!bt || o.Beat===bt)
+      && (!ec || o['Execution Champion Name']===ec);
+  });
+  const cnt = document.getElementById('ro-sel-cnt');
+  cnt.textContent = roSelected.size ? `(${roSelected.size} selected)` : '';
+  document.getElementById('ro-list').innerHTML = filtered.map(o=>{
+    const sel = roSelected.has(o['Outlet code']);
+    return `<label style="display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid #f8fafc;cursor:pointer;background:${sel?'#eff6ff':'#fff'};transition:.1s" onmouseover="this.style.background='${sel?'#dbeafe':'#f0f7ff'}'" onmouseout="this.style.background='${sel?'#eff6ff':'#fff'}'">
+      <input type="checkbox" ${sel?'checked':''} value="${o['Outlet code']}" onchange="roToggle('${o['Outlet code']}',this.checked)" style="width:14px;height:14px;accent-color:#2563eb;flex-shrink:0;cursor:pointer">
+      <div style="min-width:0;flex:1">
+        <div style="font-size:11px;font-weight:600;color:#1e40af;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o['Outlet code']}</div>
+        <div style="font-size:11px;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o['Outlet name']}</div>
+        <div style="font-size:10px;color:#9ca3af">${o.Beat} · ${o['Execution Champion Name']}</div>
+      </div>
+      <span style="font-size:9px;background:${beatCM[o.Beat]||'#888'}22;color:${beatCM[o.Beat]||'#888'};padding:2px 5px;border-radius:8px;white-space:nowrap">${o.Beat}</span>
+    </label>`;
+  }).join('') || '<div style="padding:20px;text-align:center;color:#9ca3af;font-size:12px">No outlets found</div>';
+}
+
+function roToggle(code, checked){
+  if(checked) roSelected.add(code); else roSelected.delete(code);
+  roFilterOutlets();
+}
+
+function roSelectAll(){
+  const q = (document.getElementById('ro-q').value||'').toLowerCase();
+  const bm = document.getElementById('ro-bm').value;
+  const bt = document.getElementById('ro-beat').value;
+  const ec = document.getElementById('ro-ec').value;
+  outlets.filter(o=> o.Latitude && o.Latitude!==0
+    && (!q||(o['Outlet name']||'').toLowerCase().includes(q)||o['Outlet code'].toLowerCase().includes(q))
+    && (!bm||o['BM Mapped']===bm) && (!bt||o.Beat===bt) && (!ec||o['Execution Champion Name']===ec)
+  ).forEach(o=>roSelected.add(o['Outlet code']));
+  roFilterOutlets();
+}
+
+function roClearSel(){
+  roSelected.clear();
+  roOptimized = [];
+  document.getElementById('ro-result').innerHTML = '';
+  document.getElementById('ro-summary').textContent = 'Select outlets → click Optimize';
+  roFilterOutlets();
+  roClearMapLayers();
+}
+
+// ── Nearest-Neighbour TSP heuristic ──
+function nearestNeighbour(codes){
+  const pool = [...codes];
+  if(pool.length === 0) return [];
+  const getO = c => outlets.find(x=>x['Outlet code']===c);
+  // start from outlet with smallest average distance to others (centre-ish point)
+  let startCode = pool[0];
+  let minAvg = Infinity;
+  pool.forEach(c=>{
+    const o = getO(c); if(!o) return;
+    const avg = pool.reduce((s,d)=>{const od=getO(d);return s+(od?haversine(o.Latitude,o.Longitude,od.Latitude,od.Longitude):0);},0)/pool.length;
+    if(avg < minAvg){minAvg=avg;startCode=c;}
+  });
+  const visited = [startCode];
+  const remaining = pool.filter(c=>c!==startCode);
+  while(remaining.length > 0){
+    const last = getO(visited[visited.length-1]);
+    let bestIdx = 0, bestDist = Infinity;
+    remaining.forEach((c,i)=>{
+      const o = getO(c); if(!o) return;
+      const d = haversine(last.Latitude, last.Longitude, o.Latitude, o.Longitude);
+      if(d < bestDist){bestDist=d; bestIdx=i;}
+    });
+    visited.push(remaining[bestIdx]);
+    remaining.splice(bestIdx, 1);
+  }
+  return visited;
+}
+
+function runOptimizer(){
+  if(roSelected.size < 2) return toast('Kam se kam 2 outlets select karo','error');
+  if(!roMapInst) roInit();
+  const codes = [...roSelected].filter(c=>{const o=outlets.find(x=>x['Outlet code']===c);return o&&o.Latitude&&o.Latitude!==0;});
+  if(codes.length < 2) return toast('Selected outlets mein valid coordinates nahi hain','error');
+  roOptimized = nearestNeighbour(codes);
+  renderROResult();
+  renderROMap();
+}
+
+function renderROResult(){
+  const list = roOptimized;
+  if(!list.length){document.getElementById('ro-result').innerHTML='';return;}
+  let total = 0;
+  const pairs = [];
+  for(let i=0;i<list.length-1;i++){
+    const a=outlets.find(x=>x['Outlet code']===list[i]);
+    const b=outlets.find(x=>x['Outlet code']===list[i+1]);
+    const d=(a&&b&&a.Latitude&&b.Latitude)?haversine(a.Latitude,a.Longitude,b.Latitude,b.Longitude):0;
+    pairs.push(d); total+=d;
+  }
+  const fmtD = d => d<1?(d*1000).toFixed(0)+'m':d.toFixed(2)+'km';
+  document.getElementById('ro-summary').innerHTML =
+    `<span style="color:#16a34a;font-weight:700">${list.length} outlets</span> &nbsp;·&nbsp; <span style="color:#2563eb;font-weight:700">🛣 ${fmtD(total)} total</span> &nbsp;·&nbsp; Nearest-neighbour optimized`;
+  document.getElementById('ro-result').innerHTML = list.map((c,i)=>{
+    const o=outlets.find(x=>x['Outlet code']===c);
+    const distToNext = i<pairs.length ? pairs[i] : null;
+    return `<div style="display:flex;flex-direction:column">
+      <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 6px;background:${i%2===0?'#fff':'#f8fafc'};border-radius:6px;margin-bottom:2px">
+        <div style="width:22px;height:22px;border-radius:50%;background:#2563eb;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">${i+1}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:10px;color:#3b82f6;font-weight:600">${c}</div>
+          <div style="font-size:12px;color:#111827;font-weight:500;line-height:1.3;word-break:break-word">${o?o['Outlet name']:c}</div>
+          <div style="font-size:10px;color:#9ca3af;margin-top:2px">${o?o.Beat+' · '+o['Execution Champion Name']:''}</div>
+        </div>
+      </div>
+      ${distToNext!==null?`<div style="text-align:center;font-size:10px;color:#f59e0b;font-weight:600;padding:1px 0;user-select:none">↓ ${fmtD(distToNext)}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function roClearMapLayers(){
+  roMapLayers.forEach(l=>{try{roMapInst&&roMapInst.removeLayer(l)}catch(e){}});
+  roMapLayers=[];
+}
+
+function renderROMap(){
+  if(!roMapInst) roInit();
+  roClearMapLayers();
+  document.getElementById('ro-map-hint').style.display='none';
+  const list = roOptimized;
+  const pts = list.map(c=>outlets.find(x=>x['Outlet code']===c)).filter(o=>o&&o.Latitude&&o.Latitude!==0);
+  if(pts.length<2) return;
+  // Draw route polyline
+  const latlngs = pts.map(o=>[o.Latitude,o.Longitude]);
+  const line = L.polyline(latlngs,{color:'#2563eb',weight:3,opacity:.8,dashArray:'6,4'}).addTo(roMapInst);
+  roMapLayers.push(line);
+  // Markers with stop numbers
+  pts.forEach((o,i)=>{
+    const isFirst = i===0, isLast = i===pts.length-1;
+    const color = isFirst?'#16a34a':isLast?'#dc2626':'#2563eb';
+    const icon = L.divIcon({
+      className:'',
+      html:`<div style="background:${color};color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)">${i+1}</div>`,
+      iconSize:[22,22],iconAnchor:[11,11]
+    });
+    const m = L.marker([o.Latitude,o.Longitude],{icon}).addTo(roMapInst);
+    m.bindPopup(`<b>#${i+1} ${o['Outlet name']}</b><br><span style="font-size:11px;color:#6b7280">${o['Outlet code']} · ${o.Beat}</span>`);
+    roMapLayers.push(m);
+  });
+  roMapInst.fitBounds(line.getBounds(),{padding:[30,30]});
+}
+
+function roSendToPlanner(){
+  if(!roOptimized.length) return toast('Pehle route optimize karo','error');
+  const ecName = document.getElementById('ro-send-ec').value;
+  const wk = document.getElementById('ro-send-wk').value;
+  const day = document.getElementById('ro-send-day').value;
+  if(!ecName) return toast('EC select karo','error');
+  const key = `${wk}__${encodeKey(ecName)}__${day}`;
+  if(!pjp[key]) pjp[key] = [];
+  let added = 0;
+  roOptimized.forEach(c=>{if(!pjp[key].includes(c)){pjp[key].push(c);added++;}});
+  if(!added) return toast('Sab outlets already us day mein hain','error');
+  toast(`${added} outlets added to Week ${wk} ${day} for ${ecName} ✓`,'success');
+  showTab('planner');
+  document.getElementById('pl-wk').value=wk;
+  const plEC=document.getElementById('pl-ec');
+  if([...plEC.options].some(o=>o.value===ecName)) plEC.value=ecName;
+  renderPlanner();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PJP DAY-WISE PLAN IMPORT + AUTO OPTIMIZE
+// ══════════════════════════════════════════════════════════════
+function importPJP(e){const f=e.target.files[0];if(f)processPJPFile(f);e.target.value='';}
+
+function processPJPFile(file){
+  const ext=file.name.split('.').pop().toLowerCase();
+  if(ext==='csv'){
+    Papa.parse(file,{header:true,skipEmptyLines:true,complete:r=>processPJPRows(r.data)});
+  } else {
+    const rd=new FileReader();
+    rd.onload=ev=>{
+      const wb=XLSX.read(ev.target.result,{type:'binary'});
+      processPJPRows(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]));
+    };
+    rd.readAsBinaryString(file);
+  }
+}
+
+function processPJPRows(rows){
+  const wk      = document.getElementById('pjpi-wk').value;
+  const defEC   = document.getElementById('pjpi-ec').value;
+  const overwrite = document.getElementById('pjpi-overwrite').checked;
+  const resEl   = document.getElementById('pjp-imp-res');
+
+  // ── 1. Build a case-insensitive header map from first row
+  // XLSX sometimes returns headers with trailing spaces or mixed case
+  const headerKeys = rows.length ? Object.keys(rows[0]) : [];
+  const hmap = {}; // normalised_lower -> actual key in row
+  headerKeys.forEach(k=>{ hmap[k.trim().toLowerCase()] = k; });
+
+  // Helper: get value from row by any of the candidate header names
+  const getVal = (row, candidates) => {
+    for(const c of candidates){
+      const actual = hmap[c.toLowerCase()];
+      if(actual !== undefined && row[actual] !== undefined && row[actual] !== null && row[actual] !== '')
+        return String(row[actual]).trim();
+    }
+    return '';
+  };
+
+  // Day header candidates (tolerant of case, spaces, full names)
+  const dayHeaders = {
+    Mon:['mon','monday','mon ','Monday','MON'],
+    Tue:['tue','tuesday','tue ','Tuesday','TUE'],
+    Wed:['wed','wednesday','wed ','Wednesday','WED'],
+    Thu:['thu','thursday','thu ','Thursday','THU'],
+    Fri:['fri','friday','fri ','Friday','FRI'],
+    Sat:['sat','saturday','sat ','Saturday','SAT'],
+  };
+
+  // Outlet code candidates
+  const codeKeys = ['outlet code','outlet_code','code','outletcode'];
+  // EC candidates
+  const ecKeys   = ['ec name','ec_name','ec','execution champion name','execution champion','exec champion'];
+
+  // Check if at least one day column exists
+  const hasDayCols = DAYS.some(d=>dayHeaders[d].some(h=>hmap[h.toLowerCase()]));
+  if(!hasDayCols){
+    resEl.innerHTML=`<div style="padding:10px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;color:#dc2626;font-size:13px">
+      ⚠ File mein Mon/Tue/Wed/Thu/Fri/Sat columns nahi mile.<br>
+      <b>Available columns:</b> ${headerKeys.join(', ')}
+    </div>`;
+    return;
+  }
+
+  // ── 2. Parse rows into buckets: { ecName: { Mon:[codes], … } }
+  const dayBuckets = {};
+  let skippedNoCoord=0, skippedNoCode=0, skippedNoEC=0;
+
+  rows.forEach(r=>{
+    const code = getVal(r, codeKeys);
+    if(!code){ skippedNoCode++; return; }
+
+    const o = outlets.find(x=>x['Outlet code']===code);
+    if(!o || !o.Latitude || o.Latitude===0){ skippedNoCoord++; return; }
+
+    const ecRaw = getVal(r, ecKeys);
+    const ecName = (ecRaw || defEC).trim();
+    if(!ecName){ skippedNoEC++; return; }
+
+    if(!dayBuckets[ecName]) dayBuckets[ecName]={Mon:[],Tue:[],Wed:[],Thu:[],Fri:[],Sat:[]};
+
+    DAYS.forEach(d=>{
+      const raw = getVal(r, dayHeaders[d]);
+      // Accept: 1, "1", "yes", "y", "true" → mark as visit
+      const isVisit = raw==='1' || raw===1 || raw.toLowerCase()==='yes'
+                   || raw.toLowerCase()==='y' || raw.toLowerCase()==='true';
+      if(isVisit) dayBuckets[ecName][d].push(code);
+    });
+  });
+
+  if(!Object.keys(dayBuckets).length){
+    resEl.innerHTML=`<div style="padding:10px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;color:#dc2626;font-size:13px">
+      ⚠ Koi valid visit nahi mila (1 wale rows nahi mile).<br>
+      Skipped — no code: <b>${skippedNoCode}</b> | no coords: <b>${skippedNoCoord}</b> | no EC: <b>${skippedNoEC}</b><br>
+      <b>Detected columns:</b> ${headerKeys.join(', ')}
+    </div>`;
+    return;
+  }
+
+  // ── 3. Auto-add any new ECs to team.ecs so planner renders them
+  Object.keys(dayBuckets).forEach(ecName=>{
+    if(!team.ecs.find(x=>x.name===ecName)){
+      // Try to infer BM from outlet data
+      const sampleOutlet = outlets.find(o=>o['Execution Champion Name']===ecName);
+      team.ecs.push({name:ecName, role:'ec', bm: sampleOutlet?sampleOutlet['BM Mapped']:''});
+    }
+  });
+
+  // ── 4. Optimize each EC × Day and write into pjp{}
+  let totalAdded=0, totalDays=0, log=[];
+
+  Object.entries(dayBuckets).forEach(([ecName, dayData])=>{
+    DAYS.forEach(d=>{
+      const codes = dayData[d];
+      if(!codes.length) return;
+      const key = `${wk}__${encodeKey(ecName)}__${d}`;
+      const optimized = nearestNeighbour(codes);
+
+      if(overwrite || !pjp[key] || !pjp[key].length){
+        pjp[key] = [...optimized];
+      } else {
+        const existing = new Set(pjp[key]);
+        optimized.forEach(c=>{ if(!existing.has(c)) pjp[key].push(c); });
+      }
+
+      totalAdded += pjp[key].length;
+      totalDays++;
+
+      let km=0;
+      const cur=pjp[key];
+      for(let i=0;i<cur.length-1;i++){
+        const a=outlets.find(x=>x['Outlet code']===cur[i]);
+        const b=outlets.find(x=>x['Outlet code']===cur[i+1]);
+        if(a&&b&&a.Latitude&&b.Latitude&&a.Latitude!==0)
+          km+=haversine(a.Latitude,a.Longitude,b.Latitude,b.Longitude);
+      }
+      log.push({ec:ecName, day:d, cnt:cur.length, km:km.toFixed(2)});
+    });
+  });
+
+  // ── 5. Refresh all UI — reset planner filters so all ECs show
+  populateSelects();
+  document.getElementById('pl-bm').value = '';
+  document.getElementById('pl-ec').value = '';
+  document.getElementById('pl-wk').value = wk;
+  updatePJPStatus();
+  renderReport();
+
+  // ── 6. Render result summary
+  const grouped = {};
+  log.forEach(l=>{ if(!grouped[l.ec]) grouped[l.ec]=[]; grouped[l.ec].push(l); });
+
+  const ecCount = Object.keys(grouped).length;
+  let html=`
+  <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+    <div>
+      <div style="font-size:13px;font-weight:700;color:#15803d">✅ Import & Route Optimization Complete!</div>
+      <div style="font-size:12px;color:#374151;margin-top:3px">
+        Week <b>${wk}</b> &nbsp;·&nbsp; <b>${ecCount}</b> ECs &nbsp;·&nbsp; <b>${totalDays}</b> day-routes &nbsp;·&nbsp; <b>${totalAdded}</b> outlet visits planned
+        ${skippedNoCoord?`<span style="color:#f59e0b"> &nbsp;·&nbsp; ${skippedNoCoord} skipped (no coords)</span>`:''}
+      </div>
+    </div>
+    <button class="btn bg sm" onclick="showTab('planner')" style="white-space:nowrap">→ PJP Planner Dekho</button>
+  </div>
+  <div style="overflow-x:auto">
+  <table style="width:100%;font-size:12px;border-collapse:collapse;min-width:560px">
+  <thead>
+    <tr style="background:#0f2744;color:#fff">
+      <th style="padding:7px 10px;text-align:left;border:1px solid #1e3a5f">EC Name</th>
+      <th style="padding:7px 10px;border:1px solid #1e3a5f">Day</th>
+      <th style="padding:7px 10px;border:1px solid #1e3a5f">Outlets</th>
+      <th style="padding:7px 10px;border:1px solid #1e3a5f">Route Distance</th>
+      <th style="padding:7px 10px;text-align:left;border:1px solid #1e3a5f">Optimized Order (first 5)</th>
+    </tr>
+  </thead><tbody>`;
+
+  Object.entries(grouped).forEach(([ecName, days], gi)=>{
+    days.forEach((l,li)=>{
+      const key=`${wk}__${encodeKey(l.ec)}__${l.day}`;
+      const cur=pjp[key]||[];
+      const preview=cur.slice(0,5).map(c=>`<span style="background:#dbeafe;color:#1e40af;border-radius:3px;padding:1px 4px;font-size:10px">${c}</span>`).join(' → ')+(cur.length>5?` <span style="color:#9ca3af">+${cur.length-5} more</span>`:'');
+      const bg = gi%2===0?'#fff':'#f8fafc';
+      html+=`<tr style="background:${bg}">
+        ${li===0?`<td style="padding:6px 10px;border:1px solid #e5e7eb;font-weight:700;color:#1e40af;vertical-align:top" rowspan="${days.length}">👤 ${ecName}</td>`:''}
+        <td style="padding:6px 10px;border:1px solid #e5e7eb;font-weight:600;white-space:nowrap">${l.day}</td>
+        <td style="padding:6px 10px;border:1px solid #e5e7eb;text-align:center;font-weight:700;color:#2563eb">${l.cnt}</td>
+        <td style="padding:6px 10px;border:1px solid #e5e7eb;text-align:center;font-weight:600;color:#16a34a;white-space:nowrap">🛣 ${l.km} km</td>
+        <td style="padding:6px 10px;border:1px solid #e5e7eb">${preview}</td>
+      </tr>`;
+    });
+  });
+
+  html+=`</tbody></table></div>`;
+  resEl.innerHTML=html;
+  document.getElementById('pjp-imp-go-btn').style.display='inline-flex';
+  toast(`✅ ${ecCount} ECs, ${totalDays} routes optimized & loaded into Planner!`,'success');
+}
+
+// ── PJP Template download
+function dlPJPTemplate(){
+  // Build template with all outlets as rows + day columns
+  const header=['Outlet Code','Outlet Name','Beat','BM Mapped','EC Name','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const sampleRows=outlets.slice(0,10).map((o,i)=>[
+    o['Outlet code'], o['Outlet name'], o.Beat, o['BM Mapped'], o['Execution Champion Name'],
+    i<3?1:0,  // Mon — first 3 as sample
+    i>=3&&i<6?1:0, // Tue
+    i>=6&&i<9?1:0, // Wed
+    0,0,0
+  ]);
+  // Create Excel with two sheets: Template + Instructions
+  const wb = XLSX.utils.book_new();
+
+  // Sheet 1: Template
+  const wsData = [header, ...sampleRows];
+  // Append remaining outlets with all zeros for user to fill
+  outlets.slice(10).forEach(o=>wsData.push([o['Outlet code'],o['Outlet name'],o.Beat,o['BM Mapped'],o['Execution Champion Name'],0,0,0,0,0,0]));
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  ws['!cols']=[{wch:12},{wch:38},{wch:14},{wch:16},{wch:22},{wch:6},{wch:6},{wch:6},{wch:6},{wch:6},{wch:6}];
+  XLSX.utils.book_append_sheet(wb, ws, 'PJP Plan');
+
+  // Sheet 2: Instructions
+  const inst=[
+    ['PJP Plan Import — Instructions'],
+    [''],
+    ['Column','Description'],
+    ['Outlet Code','Required. Must match outlet codes in the app.'],
+    ['Outlet Name','Optional. For your reference only.'],
+    ['Beat / BM Mapped','Optional. For your reference only.'],
+    ['EC Name','Optional. Assign outlet to a specific EC. If blank, the EC selected in the app is used.'],
+    ['Mon / Tue / Wed / Thu / Fri / Sat','Put 1 = Visit this outlet on this day. Put 0 = Skip.'],
+    [''],
+    ['Notes:'],
+    ['- One outlet can appear on multiple days (mark 1 in each day column).'],
+    ['- After uploading, the app runs nearest-neighbour route optimization per day automatically.'],
+    ['- The optimized route is loaded directly into the PJP Planner for the selected Week.'],
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(inst), 'Instructions');
+
+  XLSX.writeFile(wb,'PJP_Plan_Template.xlsx');
+  toast('Template downloaded ✓','success');
 }
 
 init();
