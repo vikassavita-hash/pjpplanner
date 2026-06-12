@@ -9,157 +9,934 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:"Segoe UI",system-ui,sans-serif}
-body{display:flex;height:100vh;overflow:hidden;background:#f0f2f5;font-size:14px;color:#1f2937}
-#sb{width:240px;background:#0f2744;display:flex;flex-direction:column;flex-shrink:0;z-index:10}
-#logo{padding:18px 16px;border-bottom:1px solid #1e3a5f}
-#logo h1{color:#fff;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
-#logo p{color:#6899be;font-size:11px;margin-top:3px}
-nav{flex:1;padding:8px 0;overflow-y:auto}
-.ni{display:flex;align-items:center;gap:10px;padding:11px 16px;color:#90b4cf;cursor:pointer;transition:.15s;border-left:3px solid transparent;font-size:13px;font-weight:500}
-.ni:hover{background:#1a3454;color:#fff}
-.ni.active{background:#1a3454;color:#fff;border-left-color:#3b82f6}
-.ng{padding:12px 16px 4px;font-size:10px;letter-spacing:1px;color:#3d6080;text-transform:uppercase;font-weight:600}
-#sb-footer{padding:12px 16px;border-top:1px solid #1e3a5f}
-#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.topbar{background:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e5e7eb;flex-shrink:0;gap:8px;flex-wrap:wrap}
-.topbar h2{font-size:16px;font-weight:600;color:#1f2937}
-.ta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.btn{padding:7px 14px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:500;transition:.15s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
-.bp{background:#2563eb;color:#fff}.bp:hover{background:#1d4ed8}
-.bs{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}.bs:hover{background:#e5e7eb}
-.bd{background:#ef4444;color:#fff}.bd:hover{background:#dc2626}
-.bg{background:#16a34a;color:#fff}.bg:hover{background:#15803d}
-.bw{background:#f59e0b;color:#fff}.bw:hover{background:#d97706}
-.sm{padding:5px 10px;font-size:12px}
-.tc{display:none;flex-direction:column;height:100%;overflow:hidden}
-.tc.active{display:flex}
-.mo{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:none;align-items:center;justify-content:center}
-.mo.open{display:flex}
-.md{background:#fff;border-radius:12px;padding:24px;min-width:460px;max-width:660px;max-height:88vh;overflow-y:auto;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.25)}
-.md h3{font-size:16px;font-weight:700;margin-bottom:16px;color:#111827}
-.fr{margin-bottom:12px}
-.fr label{display:block;font-size:12px;font-weight:600;color:#4b5563;margin-bottom:4px}
-.fr input,.fr select,.fr textarea{width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;outline:none;transition:.15s}
-.fr input:focus,.fr select:focus,.fr textarea:focus{border-color:#3b82f6;box-shadow:0 0 0 3px #dbeafe}
-.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.mf{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid #f1f5f9}
-.cx{position:absolute;top:14px;right:14px;background:none;border:none;font-size:22px;cursor:pointer;color:#9ca3af;line-height:1}.cx:hover{color:#1f2937}
-table{width:100%;border-collapse:collapse}
-th{background:#f8fafc;padding:9px 12px;text-align:left;font-size:12px;font-weight:600;color:#4b5563;border-bottom:1px solid #e5e7eb;white-space:nowrap}
-td{padding:8px 12px;border-bottom:1px solid #f1f5f9;font-size:13px;color:#374151}
-tr:last-child td{border-bottom:none}
-tr:hover td{background:#f8fafc}
-.badge{display:inline-flex;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
-.tw{margin:14px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;flex:1;overflow:auto}
-.uz{border:2px dashed #d1d5db;border-radius:8px;padding:28px;text-align:center;cursor:pointer;transition:.15s;background:#fafbfc}
-.uz:hover,.uz.drag-active{border-color:#3b82f6;background:#eff6ff}
-.toast{position:fixed;bottom:20px;right:20px;background:#1f2937;color:#fff;padding:12px 20px;border-radius:8px;font-size:13px;z-index:99999;opacity:0;transition:.3s;transform:translateY(10px);pointer-events:none}
-.toast.show{opacity:1;transform:translateY(0)}
-.toast.success{background:#15803d}.toast.error{background:#dc2626}
-.di{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);background:#0f2744;color:#fff;padding:8px 18px;border-radius:20px;font-size:12px;z-index:1000;display:none;font-weight:500;box-shadow:0 4px 12px rgba(0,0,0,.3);pointer-events:none;max-width:80%;text-align:center;line-height:1.5}
-.pg{display:grid;grid-template-columns:170px repeat(6,1fr);background:#fff;border:1px solid #e5e7eb;border-radius:8px;min-width:900px}
-.phd{padding:10px 8px;font-size:12px;font-weight:600;color:#4b5563;background:#f8fafc;border-right:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;text-align:center}
-.pep{padding:10px 8px;border-right:1px solid #e5e7eb;background:#fafbfc;border-bottom:1px solid #f1f5f9;display:flex;flex-direction:column;justify-content:center;min-height:90px}
-.pep b{font-size:12px;color:#111827}
-.pep span{font-size:10px;color:#6b7280;margin-top:2px}
-.pce{padding:6px;border-right:1px solid #f1f5f9;border-bottom:1px solid #f1f5f9;min-height:90px;position:relative;transition:.1s}
-.pce:hover{background:#f0f7ff}
-.pce.dov{background:#dbeafe!important;border:2px dashed #3b82f6}
-.chip{background:#eff6ff;color:#1e40af;border-radius:4px;padding:3px 6px;font-size:10px;margin-bottom:2px;display:flex;align-items:center;gap:4px;line-height:1.4}
-.chip .cn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.chip-del{cursor:pointer;color:#93c5fd;flex-shrink:0;font-size:15px;line-height:1}.chip-del:hover{color:#dc2626}
-.pi{padding:7px 10px;background:#fff;border:1px solid #e5e7eb;border-radius:6px;margin-bottom:5px;cursor:grab;font-size:12px;transition:.1s;user-select:none}
-.pi:hover{background:#eff6ff;border-color:#93c5fd}.pi:active{cursor:grabbing;opacity:.7}
-.add-btn{position:absolute;bottom:4px;right:4px;width:22px;height:22px;background:#3b82f6;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;opacity:0;transition:.15s;line-height:1;font-weight:300}
-.pce:hover .add-btn{opacity:1}
-.stat{background:#fff;border-radius:8px;padding:14px 16px;border:1px solid #e5e7eb}
-.stat .lbl{font-size:11px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-.stat .val{font-size:26px;font-weight:700;color:#1f2937;margin-top:3px}
-.stat .sub{font-size:11px;color:#9ca3af;margin-top:2px}
-.tcard{background:#fff;border-radius:8px;border:1px solid #e5e7eb;padding:16px;position:relative}
-.tav{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;margin-bottom:10px;color:#fff}
-.sku-tag{background:#f3f4f6;border:1px solid #e5e7eb;border-radius:14px;padding:3px 10px;font-size:12px;display:inline-flex;align-items:center;gap:5px;margin:2px}
-.sku-del{cursor:pointer;color:#9ca3af;font-size:13px}.sku-del:hover{color:#dc2626}
-.rc{background:#fff;border-radius:8px;border:1px solid #e5e7eb;padding:18px;margin-bottom:14px}
-.rc h3{font-size:14px;font-weight:600;margin-bottom:14px;color:#111827}
-.sb{padding:12px 14px 0;display:flex;gap:8px;flex-wrap:wrap}
-.sb input,.sb select{padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;outline:none;background:#fff}
-.sb input:focus{border-color:#3b82f6}
-.sb input{flex:1;min-width:160px}
-.ir{display:flex;gap:6px;margin-bottom:8px}
-.ir input{flex:1;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;outline:none}
-.ir input:focus{border-color:#3b82f6}
-@media print{#sb{display:none}#main{margin:0}#tab-report{display:block!important;height:auto;overflow:visible}.topbar{display:none}.tc{display:block!important}}
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg-primary: #081225;
+  --bg-secondary: #0d1e36;
+  --bg-card: #122847;
+  --border-color: #1e3557;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --color-blue: #3b82f6;
+  --color-blue-hover: #2563eb;
+  --color-green: #10b981;
+  --color-green-hover: #059669;
+  --color-amber: #f59e0b;
+  --color-amber-hover: #d97706;
+  --color-red: #ef4444;
+  --color-red-hover: #dc2626;
+  --sidebar-bg: #0b1528;
+  --sidebar-hover: #152640;
+  --sidebar-active: #1d3557;
+  --font-sans: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+}
+
+body {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg-primary);
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+#sb {
+  width: 250px;
+  background: var(--sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  z-index: 10;
+  border-right: 1px solid var(--border-color);
+}
+
+#logo {
+  padding: 22px 18px;
+  border-bottom: 1px solid var(--border-color);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%);
+}
+
+#logo h1 {
+  color: var(--text-primary);
+  font-size: 17px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#logo p {
+  color: var(--text-secondary);
+  font-size: 11px;
+  margin-top: 5px;
+  font-weight: 500;
+}
+
+nav {
+  flex: 1;
+  padding: 12px 0;
+  overflow-y: auto;
+}
+
+.ni {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-left: 4px solid transparent;
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+.ni:hover {
+  background: var(--sidebar-hover);
+  color: var(--text-primary);
+}
+
+.ni.active {
+  background: var(--sidebar-active);
+  color: var(--text-primary);
+  border-left-color: var(--color-blue);
+  box-shadow: inset 4px 0 10px rgba(59, 130, 246, 0.15);
+}
+
+.ng {
+  padding: 16px 18px 6px;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+#sb-footer {
+  padding: 16px 18px;
+  border-top: 1px solid var(--border-color);
+  background: rgba(8, 18, 37, 0.5);
+}
+
+#main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-primary);
+  position: relative;
+}
+
+.topbar {
+  background: var(--bg-secondary);
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.topbar h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ta {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.bp {
+  background: var(--color-blue);
+  color: #fff;
+}
+.bp:hover {
+  background: var(--color-blue-hover);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+}
+
+.bs {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+.bs:hover {
+  background: var(--sidebar-hover);
+  border-color: var(--color-blue);
+}
+
+.bd {
+  background: var(--color-red);
+  color: #fff;
+}
+.bd:hover {
+  background: var(--color-red-hover);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
+}
+
+.bg {
+  background: var(--color-green);
+  color: #fff;
+}
+.bg:hover {
+  background: var(--color-green-hover);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+}
+
+.bw {
+  background: var(--color-amber);
+  color: #fff;
+}
+.bw:hover {
+  background: var(--color-amber-hover);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+}
+
+.sm {
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+#tabs-container {
+  display: flex;
+  height: 100%;
+  transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.tc {
+  width: 100%;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.mo {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 9, 20, 0.75);
+  backdrop-filter: blur(6px);
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+.mo.open {
+  display: flex;
+}
+
+.md {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 28px;
+  min-width: 480px;
+  max-width: 700px;
+  max-height: 88vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6), 0 0 1px 1px var(--border-color);
+  animation: modalEnter 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalEnter {
+  from { transform: scale(0.92); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.md h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fr {
+  margin-bottom: 16px;
+}
+
+.fr label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.fr input, .fr select, .fr textarea {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 8px;
+  font-size: 13.5px;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.fr input:focus, .fr select:focus, .fr textarea:focus {
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.fg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.mf {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-color);
+}
+
+.cx {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--text-muted);
+  line-height: 1;
+  transition: color 0.15s;
+}
+.cx:hover {
+  color: var(--text-primary);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  background: var(--bg-card);
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.75px;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+td {
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr:hover td {
+  background: rgba(59, 130, 246, 0.04);
+  color: var(--text-primary);
+}
+
+.badge {
+  display: inline-flex;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.25px;
+}
+
+.tw {
+  margin: 18px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  flex: 1;
+  overflow: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.uz {
+  border: 2px dashed var(--border-color);
+  border-radius: 12px;
+  padding: 36px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--bg-secondary);
+}
+
+.uz:hover, .uz.drag-active {
+  border-color: var(--color-blue);
+  background: rgba(59, 130, 246, 0.04);
+}
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: #0f172a;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 14px 24px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 99999;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateY(15px);
+  pointer-events: none;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.toast.success {
+  border-color: var(--color-green);
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--color-green);
+}
+.toast.error {
+  border-color: var(--color-red);
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-red);
+}
+
+.di {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 10px 22px;
+  border-radius: 24px;
+  font-size: 12px;
+  z-index: 1000;
+  display: none;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(0,0,0,.5);
+  pointer-events: none;
+  max-width: 80%;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* Planner Grid CSS */
+.pg {
+  display: grid;
+  grid-template-columns: 180px repeat(6, 1fr);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  min-width: 1000px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.phd {
+  padding: 12px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pep {
+  padding: 12px 10px;
+  border-right: 1px solid var(--border-color);
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100px;
+}
+
+.pep b {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.pep span {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.pce {
+  padding: 8px;
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  min-height: 110px;
+  position: relative;
+  transition: all 0.15s ease;
+  background: rgba(13, 30, 54, 0.2);
+  cursor: pointer;
+}
+
+.pce:hover {
+  background: rgba(59, 130, 246, 0.03);
+}
+
+.pce.dov {
+  background: rgba(59, 130, 246, 0.1) !important;
+  border: 2px dashed var(--color-blue) !important;
+}
+
+.pce.selected {
+  border: 2px solid var(--color-blue) !important;
+  box-shadow: inset 0 0 10px rgba(59, 130, 246, 0.15);
+  background: rgba(59, 130, 246, 0.05) !important;
+}
+
+.chip {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 10.5px;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1.4;
+  transition: all 0.15s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.chip:hover {
+  border-color: var(--color-blue);
+  background: var(--sidebar-hover);
+}
+
+.chip .cn {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.chip-del {
+  cursor: pointer;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  font-size: 16px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+.chip-del:hover {
+  color: var(--color-red);
+}
+
+.pi {
+  padding: 9px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 6px;
+  cursor: grab;
+  font-size: 12px;
+  transition: all 0.15s;
+  user-select: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  color: var(--text-primary);
+}
+
+.pi:hover {
+  background: var(--sidebar-hover);
+  border-color: var(--color-blue);
+  transform: translateY(-1px);
+}
+.pi:active {
+  cursor: grabbing;
+  opacity: 0.6;
+}
+
+.add-btn {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  background: var(--color-blue);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  opacity: 0;
+  transition: all 0.2s ease;
+  line-height: 1;
+  font-weight: 300;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4);
+}
+
+.pce:hover .add-btn {
+  opacity: 1;
+}
+
+.route-dist-badge {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--color-green);
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 4px;
+  padding: 3px 6px;
+  margin-top: 6px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.route-dist-badge:hover {
+  background: var(--color-green);
+  color: #fff;
+  border-color: var(--color-green);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+}
+
+.stat {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 18px 20px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.stat .lbl {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.75px;
+}
+
+.stat .val {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-top: 6px;
+}
+
+.stat .sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.tcard {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  padding: 20px;
+  position: relative;
+  box-shadow: 0 4px 15px rgba(0,0,0,.2);
+  transition: all 0.2s ease;
+}
+
+.tcard:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-blue);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+}
+
+.tav {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 15px;
+  margin-bottom: 12px;
+  color: #fff;
+  border: 2px solid rgba(255,255,255,0.1);
+}
+
+.sku-tag {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  color: var(--color-blue);
+  border-radius: 14px;
+  padding: 3px 10px;
+  font-size: 11.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2.5px;
+}
+
+.sku-del {
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.sku-del:hover {
+  color: var(--color-red);
+}
+
+.rc {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  padding: 20px;
+  margin-bottom: 18px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.rc h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sb {
+  padding: 14px 18px 0;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sb input, .sb select {
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  transition: all 0.15s ease;
+}
+
+.sb input:focus, .sb select:focus {
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.sb input {
+  flex: 1;
+  min-width: 180px;
+}
+
+.ir {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.ir input {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+}
+
+.ir input:focus {
+  border-color: var(--color-blue);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Leaflet dark map rules */
+.leaflet-container {
+  background: var(--bg-primary) !important;
+}
+.leaflet-tile {
+  filter: invert(100%) hue-rotate(180deg) brightness(90%) contrast(90%);
+}
+.leaflet-popup-content-wrapper, .leaflet-popup-tip {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
+}
+
+@media print {
+  #sb { display: none; }
+  #main { margin: 0; }
+  #tabs-container { display: block !important; transform: none !important; width: auto !important; height: auto !important; }
+  .tc { display: block !important; width: auto !important; height: auto !important; }
+  #tab-report { display: block !important; height: auto; overflow: visible; }
+  .topbar { display: none; }
+}
 </style>
 </head>
 <body>
 
 <div id="sb">
   <div id="logo">
-    <h1>🗺 PJP Planner</h1>
+    <h1><svg style="width:20px;height:20px;color:var(--color-blue)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg> PJP Planner</h1>
     <p>KSBCL Route Management</p>
   </div>
   <nav>
     <div class="ng">Overview</div>
-    <div class="ni active" data-tab="map" onclick="showTab('map')">🗺 Map View</div>
-    <div class="ni" data-tab="planner" onclick="showTab('planner')">📋 PJP Planner</div>
+    <div class="ni active" data-tab="map" onclick="showTab('map')">
+      <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/></svg> Map View
+    </div>
+    <div class="ni" data-tab="planner" onclick="showTab('planner')">
+      <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> PJP Planner
+    </div>
     <div class="ng">Management</div>
-    <div class="ni" data-tab="outlets" onclick="showTab('outlets')">🏪 Outlets</div>
-    <div class="ni" data-tab="team" onclick="showTab('team')">👥 Team</div>
-    <div class="ni" data-tab="sku" onclick="showTab('sku')">📦 SKU Manager</div>
+    <div class="ni" data-tab="outlets" onclick="showTab('outlets')">
+      <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Outlets
+    </div>
+    <div class="ni" data-tab="team" onclick="showTab('team')">
+      <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Team
+    </div>
+    <div class="ni" data-tab="sku" onclick="showTab('sku')">
+      <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><polygon points="12 22.08 12 12 3 6.92 3 17.08 12 22.08"/><polygon points="12 22.08 21 17.08 21 6.92 12 12 12 22.08"/><polygon points="12 12 21 6.92 12 1.84 3 6.92 12 12"/><line x1="12" y1="5.14" x2="12" y2="12"/></svg> SKU Manager
+    </div>
     <div class="ng">Tools</div>
-    <div class="ni" data-tab="optimizer" onclick="showTab('optimizer')">🧭 Route Optimizer</div>
-    <div class="ni" data-tab="import" onclick="showTab('import')">📥 Bulk Import</div>
-    <div class="ni" data-tab="report" onclick="showTab('report')">📊 Reports</div>
+    <div class="ni" data-tab="optimizer" onclick="showTab('optimizer')">
+      <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg> Route Optimizer
+    </div>
+    <div class="ni" data-tab="import" onclick="showTab('import')">
+      <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Bulk Import
+    </div>
+    <div class="ni" data-tab="report" onclick="showTab('report')">
+      <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Reports
+    </div>
   </nav>
   <div id="sb-footer">
-    <div style="font-size:11px;color:#3d6080">Total Outlets</div>
-    <div style="font-size:22px;font-weight:700;color:#fff" id="total-count">0</div>
-    <div style="font-size:11px;color:#4d7a9a;margin-top:4px" id="sb-pjp-status"></div>
+    <div style="font-size:11px;color:var(--text-secondary)">Total Outlets</div>
+    <div style="font-size:22px;font-weight:700;color:var(--text-primary)" id="total-count">0</div>
+    <div style="font-size:11px;color:var(--color-blue);margin-top:4px" id="sb-pjp-status"></div>
   </div>
 </div>
 
 <div id="main">
+  <div id="tabs-container">
 
 <!-- MAP TAB -->
 <div class="tc active" id="tab-map">
   <div class="topbar">
     <h2>🗺 Map View</h2>
     <div class="ta">
-      <select id="mb" onchange="applyMapF()" style="padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px"><option value="">All BMs</option></select>
-      <select id="mbt" onchange="applyMapF()" style="padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px"><option value="">All Beats</option></select>
-      <select id="mcb" onchange="applyMapF()" style="padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px">
+      <select id="mb" onchange="applyMapF()" style="padding:6px 10px;border:1px solid var(--border-color);border-radius:6px;font-size:13px;background:var(--bg-card);color:var(--text-primary)"><option value="">All BMs</option></select>
+      <select id="mbt" onchange="applyMapF()" style="padding:6px 10px;border:1px solid var(--border-color);border-radius:6px;font-size:13px;background:var(--bg-card);color:var(--text-primary)"><option value="">All Beats</option></select>
+      <select id="mcb" onchange="applyMapF()" style="padding:6px 10px;border:1px solid var(--border-color);border-radius:6px;font-size:13px;background:var(--bg-card);color:var(--text-primary)">
         <option value="beat">Color by Beat</option>
         <option value="bm">Color by BM</option>
         <option value="ec">Color by EC</option>
       </select>
       <button class="btn bp sm" onclick="openM('m-add')">+ Add Outlet</button>
-      <button class="btn bs sm" id="dist-mode-btn" onclick="toggleDistMode()" style="border:2px solid #d1d5db">📏 Distance Mode</button>
+      <button class="btn bs sm" id="dist-mode-btn" onclick="toggleDistMode()" style="border:1.5px solid var(--border-color)">📏 Distance Mode</button>
     </div>
   </div>
   <div style="flex:1;display:flex;overflow:hidden;position:relative">
     <div id="map" style="flex:1;z-index:0;min-width:0"></div>
-    <div id="dist-hint" style="position:absolute;top:10px;right:10px;z-index:1000;background:rgba(255,255,255,0.92);border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.12);padding:8px;font-size:10px;color:#6b7280;line-height:1.8;pointer-events:none">
+    <div id="dist-hint" style="position:absolute;top:10px;right:10px;z-index:1000;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.3);padding:8px;font-size:10px;color:var(--text-secondary);line-height:1.8;pointer-events:none">
       <div>Hover → outlet name</div>
       <div>Click → outlet details</div>
       <div>Right-click → delete</div>
     </div>
-    <div id="dist-panel" style="display:none;width:260px;flex-shrink:0;background:#0f2744;z-index:500;display:none;flex-direction:column;overflow:hidden;border-left:1px solid #1e3a5f">
-      <div style="padding:14px 14px 10px;border-bottom:1px solid #1e3a5f;display:flex;align-items:center;justify-content:space-between">
-        <span style="font-size:13px;font-weight:700;color:#fff">📏 Distance Check</span>
-        <span id="dist-sel-count" style="font-size:10px;background:#1e3a5f;padding:2px 8px;border-radius:10px;color:#90b4cf">0 selected</span>
+    <div id="dist-panel" style="display:none;width:260px;flex-shrink:0;background:var(--bg-secondary);z-index:500;display:none;flex-direction:column;overflow:hidden;border-left:1px solid var(--border-color)">
+      <div style="padding:14px;border-bottom:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:13px;font-weight:700;color:var(--text-primary)">📏 Distance Check</span>
+        <span id="dist-sel-count" style="font-size:10px;background:var(--bg-card);padding:2px 8px;border-radius:10px;color:var(--color-blue)">0 selected</span>
       </div>
-      <div style="padding:10px 14px;border-bottom:1px solid #1e3a5f">
-        <div style="font-size:10px;color:#4d7a9a;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Selected Outlets</div>
-        <div id="dist-selected-list" style="font-size:11px;color:#90b4cf;min-height:24px">Click outlets on map to select...</div>
+      <div style="padding:10px 14px;border-bottom:1px solid var(--border-color)">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Selected Outlets</div>
+        <div id="dist-selected-list" style="font-size:11px;color:var(--text-secondary);min-height:24px">Click outlets on map to select...</div>
       </div>
       <div style="padding:10px 14px;flex:1;overflow-y:auto">
-        <div style="font-size:10px;color:#4d7a9a;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Distances</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Distances</div>
         <div id="dist-results" style="font-size:11px"></div>
       </div>
-      <div style="padding:10px 14px;border-top:1px solid #1e3a5f">
-        <button onclick="clearDistSel()" style="width:100%;padding:7px;background:#1e3a5f;border:none;border-radius:6px;color:#90b4cf;font-size:12px;cursor:pointer;transition:.15s" onmouseover="this.style.background='#2563eb';this.style.color='#fff'" onmouseout="this.style.background='#1e3a5f';this.style.color='#90b4cf'">✕ Clear Selection</button>
+      <div style="padding:10px 14px;border-top:1px solid var(--border-color)">
+        <button onclick="clearDistSel()" style="width:100%;padding:7px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:6px;color:var(--text-secondary);font-size:12px;cursor:pointer;transition:.15s" onmouseover="this.style.background='var(--color-blue)';this.style.color='#fff'" onmouseout="this.style.background='var(--bg-card)';this.style.color='var(--text-secondary)'">✕ Clear Selection</button>
       </div>
     </div>
     <div class="di" id="dist-info"></div>
@@ -171,9 +948,9 @@ tr:hover td{background:#f8fafc}
   <div class="topbar">
     <h2>📋 PJP Planner</h2>
     <div class="ta">
-      <select id="pl-bm" onchange="renderPlanner()" style="padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px"><option value="">All BMs</option></select>
-      <select id="pl-ec" onchange="renderPlanner()" style="padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px"><option value="">All ECs</option></select>
-      <select id="pl-wk" onchange="renderPlanner()" style="padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px">
+      <select id="pl-bm" onchange="renderPlanner()" style="padding:6px 10px;border:1px solid var(--border-color);border-radius:6px;font-size:13px;background:var(--bg-card);color:var(--text-primary)"><option value="">All BMs</option></select>
+      <select id="pl-ec" onchange="renderPlanner()" style="padding:6px 10px;border:1px solid var(--border-color);border-radius:6px;font-size:13px;background:var(--bg-card);color:var(--text-primary)"><option value="">All ECs</option></select>
+      <select id="pl-wk" onchange="renderPlanner()" style="padding:6px 10px;border:1px solid var(--border-color);border-radius:6px;font-size:13px;background:var(--bg-card);color:var(--text-primary)">
         <option value="1">Week 1</option><option value="2">Week 2</option>
         <option value="3">Week 3</option><option value="4">Week 4</option>
       </select>
@@ -182,15 +959,44 @@ tr:hover td{background:#f8fafc}
     </div>
   </div>
   <div style="flex:1;display:flex;overflow:hidden">
-    <div style="width:220px;flex-shrink:0;border-right:1px solid #e5e7eb;background:#fff;display:flex;flex-direction:column;padding:10px;gap:8px">
-      <div style="font-size:12px;font-weight:600;color:#4b5563">Outlet Pool <span id="pool-cnt" style="color:#9ca3af;font-weight:400"></span></div>
-      <input id="pool-q" type="text" placeholder="Search..." oninput="renderPool()" style="padding:6px 8px;border:1px solid #d1d5db;border-radius:5px;font-size:12px;outline:none">
-      <select id="pool-beat" onchange="renderPool()" style="padding:5px 8px;border:1px solid #d1d5db;border-radius:5px;font-size:12px;outline:none"><option value="">All Beats</option></select>
-      <div style="font-size:10px;color:#9ca3af">Drag to a day cell →</div>
-      <div id="pool" style="flex:1;overflow-y:auto"></div>
+    <div style="width:220px;flex-shrink:0;border-right:1px solid var(--border-color);background:var(--bg-secondary);display:flex;flex-direction:column;padding:12px;gap:8px">
+      <div style="font-size:12px;font-weight:600;color:var(--text-primary)">Outlet Pool <span id="pool-cnt" style="color:var(--text-muted);font-weight:400"></span></div>
+      <input id="pool-q" type="text" placeholder="Search..." oninput="renderPool()" style="padding:6px 8px;border:1px solid var(--border-color);border-radius:5px;font-size:12px;outline:none;background:var(--bg-card);color:var(--text-primary)">
+      <select id="pool-beat" onchange="renderPool()" style="padding:5px 8px;border:1px solid var(--border-color);border-radius:5px;font-size:12px;outline:none;background:var(--bg-card);color:var(--text-primary)"><option value="">All Beats</option></select>
+      <div style="font-size:10px;color:var(--text-muted)">Drag to a day cell →</div>
+      <div id="pool" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:5px;"></div>
     </div>
-    <div style="flex:1;overflow:auto;padding:14px">
+    <div style="flex:1;overflow:auto;padding:14px;background:var(--bg-primary);">
       <div id="pjp-grid-wrap"></div>
+    </div>
+    
+    <!-- RIGHT: Smart Suggestions Panel -->
+    <div id="planner-suggestions-panel" style="width:280px; flex-shrink:0; border-left:1px solid var(--border-color); background:var(--bg-secondary); display:flex; flex-direction:column; overflow:hidden;">
+      <div style="padding:14px; border-bottom:1px solid var(--border-color); display:flex; flex-direction:column; gap:8px; background:var(--bg-card)">
+        <span style="font-weight:700; color:var(--text-primary); font-size:13px; display:flex; align-items:center; gap:6px;">⚡ Smart Optimization</span>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <select id="pl-opt-mode" onchange="renderPlanner()" style="flex:1; padding:5px; border:1px solid var(--border-color); border-radius:4px; font-size:11px; background:var(--bg-primary); color:var(--text-primary)">
+            <option value="round_trip">Round Trip from Depot</option>
+            <option value="one_way">One Way from Depot</option>
+            <option value="none">No Depot (Pure TSP)</option>
+          </select>
+          <button class="btn bp sm" onclick="optimizeAllRoutes()" style="padding:5px; font-size:11px; font-weight:700;">Optimize All</button>
+        </div>
+      </div>
+      
+      <div style="flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:14px;">
+        <!-- Transfer Suggestions -->
+        <div>
+          <div style="font-size:10px; font-weight:700; color:var(--color-blue); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">👥 Route Transfers</div>
+          <div id="sug-transfers" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+        
+        <!-- Nearby Suggestions -->
+        <div style="border-top:1px solid var(--border-color); padding-top:12px;">
+          <div style="font-size:10px; font-weight:700; color:var(--color-blue); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">📍 Nearby to Add</div>
+          <div id="sug-nearby"></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -312,7 +1118,7 @@ tr:hover td{background:#f8fafc}
 <!-- IMPORT TAB -->
 <div class="tc" id="tab-import">
   <div class="topbar"><h2>📥 Bulk Import</h2></div>
-  <div style="padding:20px;overflow-auto;flex:1;display:grid;grid-template-columns:1fr 1fr;gap:20px;align-content:start">
+  <div style="padding:20px;overflow-y:auto;flex:1;display:grid;grid-template-columns:1fr 1fr;gap:20px;align-content:start">
     <div class="rc">
       <h3>📥 Import Outlets (CSV / Excel)</h3>
       <p style="font-size:12px;color:#6b7280;margin-bottom:10px">Required columns: <code>Outlet code, Outlet name, Latitude, Longitude, Beat, BM Mapped, Execution Champion Name, Depot</code></p>
@@ -346,17 +1152,26 @@ tr:hover td{background:#f8fafc}
       <p style="font-size:12px;color:#6b7280;margin-bottom:12px">
         Excel mein har outlet ke samne <b>Mon, Tue, Wed, Thu, Fri, Sat</b> column mein <b>1</b> (visit) ya <b>0</b> (skip) likho.
         Upload ke baad system har din ke outlets ko <b>nearest-neighbour algorithm</b> se optimize karke PJP Planner mein automatically daal dega.
-        <br>Optional column: <b>EC Name</b> — agar file mein EC ka naam ho to wahi use hoga, warna neeche select karo.
-      </p>
-
-      <!-- Settings row -->
+        <br>Optional column: <b>EC Name</b> �      <!-- Settings row -->
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:flex-end">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:#4b5563;margin-bottom:4px">Upload Mode</div>
+          <select id="pjpi-mode" onchange="togglePJPImportMode()" style="padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;outline:none">
+            <option value="days">Day-wise (Mon, Tue... columns)</option>
+            <option value="dates">Date-wise (Specific Dates)</option>
+          </select>
+        </div>
         <div>
           <div style="font-size:11px;font-weight:600;color:#4b5563;margin-bottom:4px">Week</div>
           <select id="pjpi-wk" style="padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;outline:none">
+            <option value="all">Whole Month (All Weeks)</option>
             <option value="1">Week 1</option><option value="2">Week 2</option>
             <option value="3">Week 3</option><option value="4">Week 4</option>
           </select>
+        </div>
+        <div id="pjpi-start-date-container" style="display:none">
+          <div style="font-size:11px;font-weight:600;color:#4b5563;margin-bottom:4px">Month Start Date (Mon)</div>
+          <input type="date" id="pjpi-start-date" style="padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;outline:none;background:#fff;color:#000">
         </div>
         <div>
           <div style="font-size:11px;font-weight:600;color:#4b5563;margin-bottom:4px">Default EC (if not in file)</div>
@@ -369,17 +1184,19 @@ tr:hover td{background:#f8fafc}
           <label for="pjpi-overwrite" style="font-size:12px;color:#4b5563;cursor:pointer">Existing plan overwrite karo (same week/day)</label>
         </div>
       </div>
-
+ 
       <!-- Drop zone -->
       <div class="uz" id="uz-pjp" ondragover="event.preventDefault();this.classList.add('drag-active')" ondragleave="this.classList.remove('drag-active')" ondrop="dropFile(event,'pjp')" onclick="document.getElementById('pjpf').click()">
         <div style="font-size:32px">📅</div>
         <p style="color:#6b7280;font-size:13px;margin-top:8px">Click or drag & drop PJP Plan .xlsx / .xls / .csv</p>
-        <p style="color:#9ca3af;font-size:11px;margin-top:4px">Columns: <code>Outlet Code | Mon | Tue | Wed | Thu | Fri | Sat</code> (optional: <code>EC Name</code>)</p>
+        <p style="color:#9ca3af;font-size:11px;margin-top:4px" id="uz-pjp-desc">Columns (Day-wise): <code>Outlet Code | Mon | Tue | Wed | Thu | Fri | Sat</code> (optional: <code>Week</code>, <code>EC Name</code>)</p>
+      </div>ode | Mon | Tue | Wed | Thu | Fri | Sat</code> (optional: <code>EC Name</code>)</p>
       </div>
       <input type="file" id="pjpf" accept=".csv,.xlsx,.xls" style="display:none" onchange="importPJP(event)">
 
       <!-- Result area -->
       <div id="pjp-imp-res" style="margin-top:12px"></div>
+      <div id="pjp-imp-suggestions" style="margin-top:12px"></div>
 
       <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn bs sm" onclick="dlPJPTemplate()">↓ Download Template</button>
@@ -400,7 +1217,7 @@ tr:hover td{background:#f8fafc}
       <button class="btn bs" onclick="window.print()">🖨 Print</button>
     </div>
   </div>
-  <div style="padding:16px;overflow-auto;flex:1">
+  <div style="padding:16px;overflow-y:auto;flex:1">
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
       <div class="stat"><div class="lbl">Total Outlets</div><div class="val" id="r-o">0</div><div class="sub">All beats</div></div>
       <div class="stat"><div class="lbl">BMs</div><div class="val" id="r-b">0</div><div class="sub">Business Managers</div></div>
@@ -408,6 +1225,7 @@ tr:hover td{background:#f8fafc}
       <div class="stat"><div class="lbl">Beats / Zones</div><div class="val" id="r-bt">0</div><div class="sub">Route zones</div></div>
     </div>
     <div id="pjp-sections"></div>
+    <div id="reassignment-suggestions-report"></div>
     <div class="rc">
       <h3>📍 Beat-wise Summary</h3>
       <table><thead><tr><th>Beat</th><th>Outlets</th><th>BMs</th><th>ECs</th></tr></thead><tbody id="beat-tbody"></tbody></table>
@@ -422,8 +1240,8 @@ tr:hover td{background:#f8fafc}
     </div>
   </div>
 </div>
-
-</div>
+</div> <!-- Close #tabs-container -->
+</div> <!-- Close #main -->
 
 <!-- MODALS -->
 <div class="mo" id="m-add">
@@ -507,6 +1325,67 @@ tr:hover td{background:#f8fafc}
   </div>
 </div>
 
+<!-- MODAL: Route Preview Map -->
+<div class="mo" id="m-route-preview">
+  <div class="md" style="min-width: 800px; max-width: 90vw; height: 80vh; display: flex; flex-direction: column; padding: 24px;">
+    <button class="cx" onclick="closeM('m-route-preview')">×</button>
+    <h3 id="route-preview-title">📍 Route Sequence Map Preview</h3>
+    <div style="flex: 1; display: flex; overflow: hidden; gap: 20px; margin-top: 10px;">
+      <!-- Left side: List of stops -->
+      <div style="width: 320px; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px;">
+        <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; justify-content: space-between;">
+          <span>Stops List</span>
+          <span>Reorder / Del</span>
+        </div>
+        <div id="route-preview-stops" style="flex: 1; overflow-y: auto;"></div>
+      </div>
+      <!-- Right side: Map -->
+      <div style="flex: 1; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; position: relative;">
+        <div id="route-preview-map" style="width: 100%; height: 100%; z-index: 1;"></div>
+      </div>
+    </div>
+    <div class="mf" style="justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 14px;">
+      <div id="route-preview-stats" style="font-size: 12px; font-weight: 600; color: var(--color-green)"></div>
+      <div style="display: flex; gap: 8px;">
+        <a id="route-preview-gmaps" target="_blank" class="btn bp sm" style="text-decoration: none;">🗺 Open in Google Maps</a>
+        <button class="btn bg sm" id="route-preview-opt-btn">⚡ Optimize Route</button>
+        <button class="btn bs" onclick="closeM('m-route-preview')">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Optimization Complete Report -->
+<div class="mo" id="m-opt-report">
+  <div class="md" style="min-width: 420px; text-align: center;">
+    <button class="cx" onclick="closeM('m-opt-report')">×</button>
+    <div style="font-size: 42px; margin-bottom: 10px; animation: bounce 1s infinite alternate;">⚡</div>
+    <h3>Optimization Complete!</h3>
+    <div style="margin: 20px 0; padding: 18px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px;">
+        <span style="color: var(--text-secondary)">Routes Optimized</span>
+        <b id="opt-rep-routes" style="color: var(--text-primary)">0</b>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px;">
+        <span style="color: var(--text-secondary)">Original Distance</span>
+        <b id="opt-rep-before" style="color: var(--text-primary)">0 km</b>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px;">
+        <span style="color: var(--text-secondary)">Optimized Distance</span>
+        <b id="opt-rep-after" style="color: var(--color-green)">0 km</b>
+      </div>
+      <div style="border-top: 1px solid var(--border-color); margin-top: 12px; padding-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-weight: 600; color: var(--text-primary)">Total Savings</span>
+        <span style="font-size: 18px; font-weight: 800; color: var(--color-green)" id="opt-rep-saved">0 km (0%)</span>
+      </div>
+    </div>
+    <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5;">
+      All routes for the selected week have been sequenced using the 2-Opt local search refinement algorithm to minimize travel distance and eliminate overlapping paths.
+    </p>
+    <button class="btn bg" onclick="closeM('m-opt-report')" style="width: 100%; justify-content: center; font-weight: 700;">Done</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -520,6 +1399,303 @@ const AVCOLS=['#2563eb','#16a34a','#dc2626','#d97706','#7c3aed','#0891b2','#db27
 
 let outlets=[...RAW], team={bms:[],ecs:[]}, pjp={}, skus={}, beatCM={};
 let leafMap=null, mks={}, distLine=null, tf='all', cellTarget=null, detCode=null, editMode=false;
+let activeCellKey = null;
+
+// Standard Depot Coordinates for KSBCL depots
+const DEPOT_COORDS = {
+  "KSBCL - WHITE FIELD": { lat: 12.9564, lng: 77.7310 },
+  "KSBCL - WHITE FIELD-2": { lat: 12.9500, lng: 77.7000 },
+  "KSBCL - KOTHANUR": { lat: 13.0600, lng: 77.6500 },
+  "KSBCL - KG HALLI": { lat: 12.9823, lng: 77.6390 },
+  "KSBCL - ATTIBELE": { lat: 12.7800, lng: 77.7700 },
+  "KSBCL - HEBBALA": { lat: 13.0278, lng: 77.5863 },
+  "KSBCL - BAGALKUNTE": { lat: 12.9997, lng: 77.5723 },
+  "KSBCL - DODDABALLAPURA": { lat: 13.2900, lng: 77.5300 },
+  "KSBCL - HONGASANDRA": { lat: 12.8980, lng: 77.6250 },
+  "KSBCL - SAKALAVARA-2": { lat: 12.8300, lng: 77.6600 }
+};
+
+// Retrieve coordinate for a depot (fallback to dynamic centroid of outlets mapped to the depot, or overall centroid)
+function getDepotCoordinate(depotName, outletsList = outlets) {
+  const cleanName = (depotName || "").trim();
+  if (cleanName && DEPOT_COORDS[cleanName]) {
+    return DEPOT_COORDS[cleanName];
+  }
+  // Try to find if any outlet has this depot mapped and has valid coordinates
+  if (cleanName) {
+    const matching = outletsList.filter(o => o.Depot === cleanName && o.Latitude && o.Longitude);
+    if (matching.length > 0) {
+      let sumLat = 0, sumLng = 0, count = 0;
+      matching.forEach(o => {
+        sumLat += o.Latitude;
+        sumLng += o.Longitude;
+        count++;
+      });
+      return { lat: sumLat / count, lng: sumLng / count };
+    }
+  }
+  // Centroid of all valid outlets as fallback
+  const valid = outletsList.filter(o => o.Latitude && o.Longitude);
+  if (valid.length > 0) {
+    let sumLat = 0, sumLng = 0, count = 0;
+    valid.forEach(o => {
+      sumLat += o.Latitude;
+      sumLng += o.Longitude;
+      count++;
+    });
+    return { lat: sumLat / count, lng: sumLng / count };
+  }
+  return { lat: 12.9716, lng: 77.5946 }; // Default Bengaluru center
+}
+
+// 2-Opt Local Search TSP Refinement Heuristic
+function optimizeRoute(codes, depotName, mode = 'round_trip') {
+  if (codes.length <= 1) return [...codes];
+  
+  const getO = c => outlets.find(x => x['Outlet code'] === c);
+  const validCodes = codes.filter(c => {
+    const o = getO(c);
+    return o && o.Latitude && o.Longitude;
+  });
+  
+  if (validCodes.length <= 1) return [...codes];
+  
+  let depot = null;
+  if (mode !== 'none') {
+    depot = getDepotCoordinate(depotName);
+  }
+  
+  // 1. Initial Path Construction using Nearest-Neighbour starting from Depot or first outlet
+  let path = [];
+  if (mode === 'none') {
+    path = nearestNeighbour(validCodes);
+  } else {
+    const remaining = [...validCodes];
+    let currentLoc = depot;
+    while (remaining.length > 0) {
+      let bestIdx = -1, bestDist = Infinity;
+      for (let i = 0; i < remaining.length; i++) {
+        const o = getO(remaining[i]);
+        const d = haversine(currentLoc.lat, currentLoc.lng, o.Latitude, o.Longitude);
+        if (d < bestDist) {
+          bestDist = d;
+          bestIdx = i;
+        }
+      }
+      path.push(remaining[bestIdx]);
+      const lastO = getO(remaining[bestIdx]);
+      currentLoc = { lat: lastO.Latitude, lng: lastO.Longitude };
+      remaining.splice(bestIdx, 1);
+    }
+  }
+  
+  // Helper to calculate distance of a sequence
+  const getRouteDist = (p) => {
+    let d = 0;
+    if (mode === 'round_trip') {
+      d += haversine(depot.lat, depot.lng, getO(p[0]).Latitude, getO(p[0]).Longitude);
+      for (let i = 0; i < p.length - 1; i++) {
+        const o1 = getO(p[i]);
+        const o2 = getO(p[i+1]);
+        d += haversine(o1.Latitude, o1.Longitude, o2.Latitude, o2.Longitude);
+      }
+      d += haversine(getO(p[p.length-1]).Latitude, getO(p[p.length-1]).Longitude, depot.lat, depot.lng);
+    } else if (mode === 'one_way') {
+      d += haversine(depot.lat, depot.lng, getO(p[0]).Latitude, getO(p[0]).Longitude);
+      for (let i = 0; i < p.length - 1; i++) {
+        const o1 = getO(p[i]);
+        const o2 = getO(p[i+1]);
+        d += haversine(o1.Latitude, o1.Longitude, o2.Latitude, o2.Longitude);
+      }
+    } else {
+      for (let i = 0; i < p.length - 1; i++) {
+        const o1 = getO(p[i]);
+        const o2 = getO(p[i+1]);
+        d += haversine(o1.Latitude, o1.Longitude, o2.Latitude, o2.Longitude);
+      }
+    }
+    return d;
+  };
+  
+  // 2. 2-Opt Iterations
+  let bestDist = getRouteDist(path);
+  let improved = true;
+  let iterations = 0;
+  const maxIterations = 500;
+  
+  while (improved && iterations < maxIterations) {
+    improved = false;
+    iterations++;
+    for (let i = 0; i < path.length - 1; i++) {
+      for (let j = i + 1; j < path.length; j++) {
+        const newPath = [...path];
+        // Reverse subsegment path[i...j]
+        let left = i, right = j;
+        while (left < right) {
+          const temp = newPath[left];
+          newPath[left] = newPath[right];
+          newPath[right] = temp;
+          left++;
+          right--;
+        }
+        
+        const newDist = getRouteDist(newPath);
+        if (newDist < bestDist - 0.0001) {
+          path = newPath;
+          bestDist = newDist;
+          improved = true;
+          break;
+        }
+      }
+      if (improved) break;
+    }
+  }
+  
+  // Append any invalid codes (without lat/lng) to the end of path
+  const invalidCodes = codes.filter(c => !validCodes.includes(c));
+  return [...path, ...invalidCodes];
+}
+
+// Calculate route total distance in km
+function calculateRouteDistance(codes, depotName, mode = 'round_trip') {
+  if (codes.length === 0) return 0;
+  const getO = c => outlets.find(x => x['Outlet code'] === c);
+  const valid = codes.filter(c => {
+    const o = getO(c);
+    return o && o.Latitude && o.Longitude;
+  });
+  if (valid.length === 0) return 0;
+  
+  let d = 0;
+  let depot = null;
+  if (mode !== 'none') {
+    depot = getDepotCoordinate(depotName);
+  }
+  
+  if (mode === 'round_trip') {
+    d += haversine(depot.lat, depot.lng, getO(valid[0]).Latitude, getO(valid[0]).Longitude);
+    for (let i = 0; i < valid.length - 1; i++) {
+      const o1 = getO(valid[i]);
+      const o2 = getO(valid[i+1]);
+      d += haversine(o1.Latitude, o1.Longitude, o2.Latitude, o2.Longitude);
+    }
+    d += haversine(getO(valid[valid.length-1]).Latitude, getO(valid[valid.length-1]).Longitude, depot.lat, depot.lng);
+  } else if (mode === 'one_way') {
+    d += haversine(depot.lat, depot.lng, getO(valid[0]).Latitude, getO(valid[0]).Longitude);
+    for (let i = 0; i < valid.length - 1; i++) {
+      const o1 = getO(valid[i]);
+      const o2 = getO(valid[i+1]);
+      d += haversine(o1.Latitude, o1.Longitude, o2.Latitude, o2.Longitude);
+    }
+  } else {
+    for (let i = 0; i < valid.length - 1; i++) {
+      const o1 = getO(valid[i]);
+      const o2 = getO(valid[i+1]);
+      d += haversine(o1.Latitude, o1.Longitude, o2.Latitude, o2.Longitude);
+    }
+  }
+  return d;
+}
+
+// Generate Google Maps direction links with sequential waypoints
+function generateGoogleMapsLink(codes, depotName, mode = 'round_trip') {
+  const getO = c => outlets.find(x => x['Outlet code'] === c);
+  const valid = codes.filter(c => {
+    const o = getO(c);
+    return o && o.Latitude && o.Longitude;
+  });
+  if (valid.length === 0) return '#';
+  
+  let origin = '';
+  let destination = '';
+  let waypoints = [];
+  
+  if (mode !== 'none') {
+    const depot = getDepotCoordinate(depotName);
+    origin = `${depot.lat},${depot.lng}`;
+    if (mode === 'round_trip') {
+      destination = `${depot.lat},${depot.lng}`;
+      waypoints = valid.map(c => {
+        const o = getO(c);
+        return `${o.Latitude},${o.Longitude}`;
+      });
+    } else {
+      const last = getO(valid[valid.length - 1]);
+      destination = `${last.Latitude},${last.Longitude}`;
+      waypoints = valid.slice(0, -1).map(c => {
+        const o = getO(c);
+        return `${o.Latitude},${o.Longitude}`;
+      });
+    }
+  } else {
+    const first = getO(valid[0]);
+    origin = `${first.Latitude},${first.Longitude}`;
+    const last = getO(valid[valid.length - 1]);
+    destination = `${last.Latitude},${last.Longitude}`;
+    waypoints = valid.slice(1, -1).map(c => {
+      const o = getO(c);
+      return `${o.Latitude},${o.Longitude}`;
+    });
+  }
+  
+  let url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}`;
+  if (waypoints.length > 0) {
+    url += `&waypoints=${encodeURIComponent(waypoints.join('|'))}`;
+  }
+  return url;
+}
+
+// Helper to get first Monday of the current month
+function getFirstMondayOfCurrentMonth() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = d.getMonth();
+  const first = new Date(y, m, 1);
+  const day = first.getDay();
+  const diff = day === 0 ? 1 : day === 1 ? 0 : 8 - day;
+  const monday = new Date(y, m, 1 + diff);
+  return monday.toISOString().split('T')[0];
+}
+
+// Helper to parse dates robustly
+function parseDate(str) {
+  if (!str) return null;
+  str = String(str).trim();
+  let match = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+  if (match) {
+    return new Date(parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3]));
+  }
+  match = str.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+  if (match) {
+    return new Date(parseInt(match[3]), parseInt(match[2]) - 1, parseInt(match[1]));
+  }
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+// Toggle PJP import mode selection
+function togglePJPImportMode() {
+  const mode = document.getElementById('pjpi-mode').value;
+  const dateContainer = document.getElementById('pjpi-start-date-container');
+  const wkContainer = document.getElementById('pjpi-wk').parentNode;
+  const desc = document.getElementById('uz-pjp-desc');
+  if (mode === 'dates') {
+    dateContainer.style.display = 'block';
+    wkContainer.style.display = 'none';
+    if (desc) {
+      desc.innerHTML = `Columns (Date-wise): <code>Outlet Code | Date</code> or columns with date headers like <code>YYYY-MM-DD</code> (optional: <code>EC Name</code>)`;
+    }
+    if (!document.getElementById('pjpi-start-date').value) {
+      document.getElementById('pjpi-start-date').value = getFirstMondayOfCurrentMonth();
+    }
+  } else {
+    dateContainer.style.display = 'none';
+    wkContainer.style.display = 'block';
+    if (desc) {
+      desc.innerHTML = `Columns (Day-wise): <code>Outlet Code | Mon | Tue | Wed | Thu | Fri | Sat</code> (optional: <code>Week</code>, <code>EC Name</code>)`;
+    }
+  }
+}
 
 function init(){
   const bmSet=[...new Set(outlets.map(o=>o['BM Mapped']))].filter(Boolean);
@@ -535,7 +1711,12 @@ function init(){
   initMap();
   populateSelects();
   renderOT(); renderSKUT(); renderTeam(); renderReport();
+  renderImportSuggestions();
   document.getElementById('total-count').textContent=outlets.length;
+
+  // Initialize PJP start date input
+  const startEl = document.getElementById('pjpi-start-date');
+  if (startEl) startEl.value = getFirstMondayOfCurrentMonth();
 }
 
 function buildBeatColors(){
@@ -791,13 +1972,14 @@ function renderPlanner(){
     DAYS.forEach(d=>{
       const key=`${wk}__${encodeKey(ec.name)}__${d}`;
       const chips=(pjp[key]||[]);
-      html+=`<div class="pce" id="pce-${key}" ondragover="event.preventDefault();this.classList.add('dov')" ondragleave="this.classList.remove('dov')" ondrop="onDrop(event,'${key}')">`;
+      const isSelected = activeCellKey === key;
+      html+=`<div class="pce ${isSelected ? 'selected' : ''}" id="pce-${key}" onclick="selectCell('${key}')" ondragover="event.preventDefault();this.classList.add('dov')" ondragleave="this.classList.remove('dov')" ondrop="onDrop(event,'${key}')">`;
 
       // ── CHIPS with inter-outlet distance arrows ──
       chips.forEach((c,ci)=>{
         const o=outlets.find(x=>x['Outlet code']===c);
         const label=o?`<span style="font-size:9px;color:#93c5fd">${c}</span> ${shortName(o['Outlet name'])}`:c;
-        html+=`<div class="chip" draggable="true" ondragstart="dragChip(event,'${c}','${key}')"><span class="cn" title="${o?esc(o['Outlet name']):c}">${label}</span><span class="chip-del" onclick="removeChip('${key}','${c}')">×</span></div>`;
+        html+=`<div class="chip" draggable="true" ondragstart="dragChip(event,'${c}','${key}')"><span class="cn" title="${o?esc(o['Outlet name']):c}">${label}</span><span class="chip-del" onclick="event.stopPropagation(); removeChip('${key}','${c}')">×</span></div>`;
         // Distance arrow to next outlet
         if(ci<chips.length-1){
           const oN=outlets.find(x=>x['Outlet code']===chips[ci+1]);
@@ -822,17 +2004,21 @@ function renderPlanner(){
         }
         if(vp>0){
           const ts=tot<1?(tot*1000).toFixed(0)+'m':tot.toFixed(2)+'km';
-          html+=`<div style="font-size:9px;font-weight:700;color:#16a34a;background:#f0fdf4;border-radius:3px;padding:2px 4px;margin-top:3px;text-align:center;border:1px solid #bbf7d0">🛣 ${ts} total</div>`;
+          html+=`<div style="display:flex; gap:4px; align-items:center; margin-top:6px;">
+            <div class="route-dist-badge" onclick="event.stopPropagation(); openRoutePreview('${key}')" style="flex:1;">🛣 ${ts} total</div>
+            <button onclick="event.stopPropagation(); quickOptimizeCell('${key}')" title="Quick Optimize Route" style="background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); border-radius:4px; color:var(--color-blue); font-size:10px; font-weight:700; width:22px; height:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s;" onmouseover="this.style.background='var(--color-blue)';this.style.color='#fff'" onmouseout="this.style.background='rgba(59,130,246,0.15)';this.style.color='var(--color-blue)'">⚡</button>
+          </div>`;
         }
       }
 
-      html+=`<div class="add-btn" title="Add outlet" onclick="openCellPicker('${key}','${ec.name}','${d}')">+</div></div>`;
+      html+=`<div class="add-btn" title="Add outlet" onclick="event.stopPropagation(); openCellPicker('${key}','${ec.name}','${d}')">+</div></div>`;
     });
   });
   html+='</div>';
   document.getElementById('pjp-grid-wrap').innerHTML=html;
   renderPool();
   updatePJPStatus();
+  renderSmartSuggestions();
 }
 
 function encodeKey(s){return s.replace(/ /g,'_');}
@@ -861,12 +2047,60 @@ function onDrop(e,key){
   const el=document.getElementById('pce-'+key);
   if(el)el.classList.remove('dov');
   if(!code)return;
-  if(fromKey&&fromKey!==key){if(pjp[fromKey])pjp[fromKey]=pjp[fromKey].filter(c=>c!==code);}
-  if(!(pjp[key]||[]).includes(code)){if(!pjp[key])pjp[key]=[];pjp[key].push(code);}
+  
+  // Remove from source route if any
+  if(fromKey&&fromKey!==key){
+    if(pjp[fromKey]) {
+      pjp[fromKey]=pjp[fromKey].filter(c=>c!==code);
+      // Re-optimize source route
+      const parts = fromKey.split('__');
+      const ec = decodeKey(parts[1]);
+      const ecOutlets = outlets.filter(o => o['Execution Champion Name'] === ec && o.Latitude && o.Longitude);
+      const depotName = ecOutlets[0]?.Depot || '';
+      const mode = document.getElementById('pl-opt-mode').value;
+      pjp[fromKey] = optimizeRoute(pjp[fromKey], depotName, mode);
+    }
+  }
+  
+  // Add to target route
+  if(!(pjp[key]||[]).includes(code)){
+    if(!pjp[key])pjp[key]=[];
+    pjp[key].push(code);
+  }
+  
+  // Re-optimize target route
+  const parts = key.split('__');
+  const ec = decodeKey(parts[1]);
+  const ecOutlets = outlets.filter(o => o['Execution Champion Name'] === ec && o.Latitude && o.Longitude);
+  const depotName = ecOutlets[0]?.Depot || '';
+  const mode = document.getElementById('pl-opt-mode').value;
+  pjp[key] = optimizeRoute(pjp[key], depotName, mode);
+  
   renderPlanner();
+  selectCell(key);
 }
-function dragChip(e,code,fromKey){e.dataTransfer.setData('code',code);e.dataTransfer.setData('from-key',fromKey);}
-function removeChip(key,code){if(pjp[key])pjp[key]=pjp[key].filter(c=>c!==code);renderPlanner();}
+
+function dragChip(e,code,fromKey){
+  e.dataTransfer.setData('code',code);
+  e.dataTransfer.setData('from-key',fromKey);
+}
+
+function removeChip(key,code){
+  if(pjp[key]){
+    pjp[key]=pjp[key].filter(c=>c!==code);
+    // Re-optimize route
+    const parts = key.split('__');
+    const ec = decodeKey(parts[1]);
+    const ecOutlets = outlets.filter(o => o['Execution Champion Name'] === ec && o.Latitude && o.Longitude);
+    const depotName = ecOutlets[0]?.Depot || '';
+    const mode = document.getElementById('pl-opt-mode').value;
+    pjp[key] = optimizeRoute(pjp[key], depotName, mode);
+  }
+  renderPlanner();
+  if (activeCellKey === key) {
+    renderSmartSuggestions();
+  }
+}
 
 function openCellPicker(key,ec,day){
   cellTarget=key;
@@ -900,20 +2134,47 @@ function addSelectedToCell(){
   if(!pjp[cellTarget])pjp[cellTarget]=[];
   let added=0;
   checked.forEach(cb=>{if(!pjp[cellTarget].includes(cb.value)){pjp[cellTarget].push(cb.value);added++;}});
-  renderPlanner();closeM('m-cell');toast(added+' outlet(s) added ✓','success');
+  
+  // Re-optimize cell target
+  const parts = cellTarget.split('__');
+  const ec = decodeKey(parts[1]);
+  const ecOutlets = outlets.filter(o => o['Execution Champion Name'] === ec && o.Latitude && o.Longitude);
+  const depotName = ecOutlets[0]?.Depot || '';
+  const mode = document.getElementById('pl-opt-mode').value;
+  pjp[cellTarget] = optimizeRoute(pjp[cellTarget], depotName, mode);
+  
+  renderPlanner();
+  selectCell(cellTarget);
+  closeM('m-cell');
+  toast(added+' outlet(s) added & optimized ✓','success');
 }
 
 function addToCell(code){
   if(!pjp[cellTarget])pjp[cellTarget]=[];
   if(!pjp[cellTarget].includes(code))pjp[cellTarget].push(code);
-  renderPlanner();closeM('m-cell');toast('Outlet added to plan ✓','success');
+  
+  // Re-optimize cell target
+  const parts = cellTarget.split('__');
+  const ec = decodeKey(parts[1]);
+  const ecOutlets = outlets.filter(o => o['Execution Champion Name'] === ec && o.Latitude && o.Longitude);
+  const depotName = ecOutlets[0]?.Depot || '';
+  const mode = document.getElementById('pl-opt-mode').value;
+  pjp[cellTarget] = optimizeRoute(pjp[cellTarget], depotName, mode);
+  
+  renderPlanner();
+  selectCell(cellTarget);
+  closeM('m-cell');
+  toast('Outlet added to plan & optimized ✓','success');
 }
 
 function clearPlanner(){
   const wk=document.getElementById('pl-wk').value;
   if(!confirm('Clear all outlets for Week '+wk+'?'))return;
   Object.keys(pjp).filter(k=>k.startsWith(wk+'__')).forEach(k=>delete pjp[k]);
-  renderPlanner();toast('Week '+wk+' cleared');
+  activeCellKey = null;
+  renderPlanner();
+  renderSmartSuggestions();
+  toast('Week '+wk+' cleared');
 }
 
 function finalizePJP(){
@@ -1096,6 +2357,64 @@ function renderReport(){
   } else {
     ps.innerHTML='<div class="rc" style="color:#9ca3af;font-size:13px;text-align:center;padding:30px">No PJP scheduled yet. Go to PJP Planner to assign outlets.</div>';
   }
+
+  const sugReportDiv = document.getElementById('reassignment-suggestions-report');
+  if (sugReportDiv) {
+    if (hasPJP) {
+      const suggestions = getBulkReassignmentSuggestions();
+      if (suggestions.length > 0) {
+        let sugHtml = `
+        <div class="rc" style="border-left: 4px solid var(--color-blue); margin-top: 20px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+            <h3 style="display:flex; align-items:center; gap:8px; margin:0;">👥 Smart Reassignment & Routing Diagnostics <span style="font-size:11px; font-weight:700; color:#fff; background:var(--color-blue); padding:2px 8px; border-radius:12px;">${suggestions.length} Conflicts Found</span></h3>
+            <button class="btn bp sm" onclick="applyAllReportTransfers()" style="padding:5px 12px; font-size:11.5px; font-weight:700;">👥 Reassign All (${suggestions.length})</button>
+          </div>
+          <p style="font-size:12px; color:var(--text-secondary); margin-bottom:12px; line-height:1.4;">
+            The following scheduled outlets are geographically closer to another merchandiser's route on that day. Reassigning them will optimize travel distances and footroutes.
+          </p>
+          <div style="overflow-x:auto;">
+            <table style="min-width:900px;">
+              <thead>
+                <tr>
+                  <th>Week & Day</th>
+                  <th>Outlet</th>
+                  <th>Current EC</th>
+                  <th>Suggested EC</th>
+                  <th>Distance Saved</th>
+                  <th>Suggested Footroute (Routing Sequence)</th>
+                  <th style="width:110px;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+        suggestions.slice(0, 15).forEach(s => {
+          sugHtml += `
+            <tr>
+              <td><b>Week ${s.week}</b> — ${s.day}</td>
+              <td><b>${s.code}</b><br><span style="font-size:11px;color:var(--text-secondary)" title="${esc(s.name)}">${shortName(s.name)}</span></td>
+              <td><span style="color:var(--color-red);font-weight:600">${s.fromEc}</span><br><span style="font-size:10px;color:var(--text-muted)">(${s.currentDist.toFixed(1)} km)</span></td>
+              <td><span style="color:var(--color-green);font-weight:600">${s.toEc}</span><br><span style="font-size:10px;color:var(--text-muted)">(${s.suggestedDist.toFixed(1)} km)</span></td>
+              <td><span style="font-size:11px;font-weight:700;color:var(--color-green);background:rgba(16,185,129,0.1);padding:2px 6px;border-radius:4px;">Save ${s.saved.toFixed(1)} km</span></td>
+              <td style="font-size:10px; max-width:350px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${esc(s.footroute)}"><code>${s.footroute}</code></td>
+              <td><button class="btn bp sm" onclick="applyReportTransfer('${s.code}', '${s.week}__${encodeKey(s.fromEc)}__${s.day}', '${s.week}__${encodeKey(s.toEc)}__${s.day}')" style="padding:4px 8px; font-size:10.5px;">👥 Reassign</button></td>
+            </tr>
+          `;
+        });
+        sugHtml += `
+              </tbody>
+            </table>
+          </div>
+          ${suggestions.length > 15 ? `<div style="font-size:11px; color:var(--text-muted); margin-top:8px; text-align:right;">Showing top 15 suggestions. Export report to Excel to see all recommendations.</div>` : ''}
+        </div>
+        `;
+        sugReportDiv.innerHTML = sugHtml;
+      } else {
+        sugReportDiv.innerHTML = '<div class="rc" style="border-left: 4px solid var(--color-green); margin-top: 20px; padding:15px; color:var(--color-green); font-weight:600; font-size:13px; display:flex; align-items:center; gap:8px;">✅ All outlets are optimally assigned according to nearby merchandiser routes! (0 conflicts found)</div>';
+      }
+    } else {
+      sugReportDiv.innerHTML = '';
+    }
+  }
 }
 
 // ── IMPORT
@@ -1163,12 +2482,12 @@ function dlPJP(){
 
   // Week sheets — each outlet on separate row with distance columns
   [1,2,3,4].forEach(wk=>{
-    const rows=[['Week','Exec Champion','BM','Day','Outlet Code','Outlet Name','Beat','BM Mapped','EC','Distance to Next (km)','Day Route Total (km)']];
+    const rows=[['Week','Exec Champion','BM','Day','Visit Order','Outlet Code','Outlet Name','Beat','BM Mapped','EC','Distance to Next (km)','Day Route Total (km)','Footroute Path']];
     team.ecs.forEach(ec=>{
       DAYS.forEach(d=>{
         const codes=pjp[`${wk}__${encodeKey(ec.name)}__${d}`]||[];
         if(codes.length===0){
-          rows.push([wk,ec.name,ec.bm,d,'','','','','','','']);
+          rows.push([wk,ec.name,ec.bm,d,'','','','','','','','','']);
         } else {
           // Pre-compute sequential distances between outlets
           let dayTot=0;
@@ -1185,25 +2504,46 @@ function dlPJP(){
             }
           }
           dayDistances.push(''); // last outlet has no "next"
+
+          // Get footroute text
+          const ecOutlets = outlets.filter(o => o['Execution Champion Name'] === ec.name && o.Latitude && o.Longitude);
+          const depotName = ecOutlets[0]?.Depot || '';
+          const mode = document.getElementById('pl-opt-mode')?.value || 'round_trip';
+          const routeSequenceNames = codes.map(c => {
+            const out = outlets.find(x => x['Outlet code'] === c);
+            return out ? out['Outlet name'] : c;
+          });
+          let footrouteText = '';
+          const depotStr = depotName ? depotName : 'Depot';
+          if (mode === 'round_trip') {
+            footrouteText = `${depotStr} -> ` + routeSequenceNames.join(' -> ') + ` -> ${depotStr}`;
+          } else if (mode === 'one_way') {
+            footrouteText = `${depotStr} -> ` + routeSequenceNames.join(' -> ');
+          } else {
+            footrouteText = routeSequenceNames.join(' -> ');
+          }
+
           codes.forEach((c,ci)=>{
             const o=outlets.find(x=>x['Outlet code']===c);
             // Day Route Total shown only on last outlet row of the day
             rows.push([
               wk, ec.name, ec.bm, d,
+              ci + 1, // Visit Order
               c,
               o?o['Outlet name']:'',
               o?o.Beat:'',
               o?o['BM Mapped']:'',
               o?o['Execution Champion Name']:'',
               dayDistances[ci],
-              ci===codes.length-1 ? +dayTot.toFixed(3) : ''
+              ci===codes.length-1 ? +dayTot.toFixed(3) : '',
+              footrouteText
             ]);
           });
         }
       });
     });
     const ws=XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols']=[{wch:6},{wch:22},{wch:18},{wch:6},{wch:12},{wch:35},{wch:18},{wch:18},{wch:22},{wch:20},{wch:20}];
+    ws['!cols']=[{wch:6},{wch:22},{wch:18},{wch:6},{wch:11},{wch:12},{wch:35},{wch:18},{wch:18},{wch:22},{wch:20},{wch:20},{wch:50}];
     XLSX.utils.book_append_sheet(wb,ws,'Week '+wk);
   });
 
@@ -1233,6 +2573,31 @@ function dlPJP(){
   });
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(es),'EC Summary');
 
+  // Reassignment Suggestions sheet
+  const suggestions = getBulkReassignmentSuggestions();
+  const sugRows = [
+    ['Week', 'Day', 'Outlet Code', 'Outlet Name', 'Current EC Name', 'Current Dist to Route (km)', 'Suggested EC Name', 'Suggested Dist to Route (km)', 'Distance Saved (km)', 'Suggested Footroute Sequence']
+  ];
+  suggestions.forEach(s => {
+    sugRows.push([
+      'Week ' + s.week,
+      s.day,
+      s.code,
+      s.name,
+      s.fromEc,
+      s.currentDist,
+      s.toEc,
+      s.suggestedDist,
+      s.saved,
+      s.footroute
+    ]);
+  });
+  const wsSug = XLSX.utils.aoa_to_sheet(sugRows);
+  wsSug['!cols'] = [
+    {wch: 8}, {wch: 6}, {wch: 12}, {wch: 35}, {wch: 22}, {wch: 22}, {wch: 22}, {wch: 22}, {wch: 18}, {wch: 70}
+  ];
+  XLSX.utils.book_append_sheet(wb, wsSug, 'Reassignment Suggestions');
+
   XLSX.writeFile(wb,'PJP_Report_KSBCL.xlsx');
   toast('PJP Report downloaded ✓','success');
 }
@@ -1252,13 +2617,37 @@ document.addEventListener('click',e=>{if(e.target.classList.contains('mo'))e.tar
 window.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.mo.open').forEach(m=>m.classList.remove('open'));});
 
 function showTab(t){
+  const TAB_ORDER = ['map', 'planner', 'outlets', 'team', 'sku', 'optimizer', 'import', 'report'];
+  const idx = TAB_ORDER.indexOf(t);
+
   document.querySelectorAll('.tc').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.ni').forEach(el=>el.classList.remove('active'));
-  document.getElementById('tab-'+t).classList.add('active');
-  document.querySelector(`.ni[data-tab="${t}"]`)?.classList.add('active');
-  if(t==='map'){setTimeout(()=>{if(leafMap)leafMap.invalidateSize();},120);}
+
+  const targetTab = document.getElementById('tab-'+t);
+  if (targetTab) targetTab.classList.add('active');
+
+  const navItem = document.querySelector(`.ni[data-tab="${t}"]`);
+  if (navItem) navItem.classList.add('active');
+
+  if (idx !== -1) {
+    const container = document.getElementById('tabs-container');
+    if (container) {
+      container.style.transform = `translateX(-${idx * 100}%)`;
+    }
+  }
+
+  if(t==='map'){
+    setTimeout(()=>{if(leafMap)leafMap.invalidateSize();}, 150);
+    setTimeout(()=>{if(leafMap)leafMap.invalidateSize();}, 550);
+  }
   if(t==='optimizer'){
-    setTimeout(()=>{roInit();roMapInst.invalidateSize();},120);
+    setTimeout(()=>{
+      roInit();
+      if(roMapInst) roMapInst.invalidateSize();
+    }, 150);
+    setTimeout(()=>{
+      if(roMapInst) roMapInst.invalidateSize();
+    }, 550);
     roFilterOutlets();
   }
   if(t==='planner')renderPlanner();
@@ -1374,7 +2763,7 @@ function runOptimizer(){
   if(!roMapInst) roInit();
   const codes = [...roSelected].filter(c=>{const o=outlets.find(x=>x['Outlet code']===c);return o&&o.Latitude&&o.Latitude!==0;});
   if(codes.length < 2) return toast('Selected outlets mein valid coordinates nahi hain','error');
-  roOptimized = nearestNeighbour(codes);
+  roOptimized = optimizeRoute(codes, '', 'none');
   renderROResult();
   renderROMap();
 }
@@ -1392,7 +2781,7 @@ function renderROResult(){
   }
   const fmtD = d => d<1?(d*1000).toFixed(0)+'m':d.toFixed(2)+'km';
   document.getElementById('ro-summary').innerHTML =
-    `<span style="color:#16a34a;font-weight:700">${list.length} outlets</span> &nbsp;·&nbsp; <span style="color:#2563eb;font-weight:700">🛣 ${fmtD(total)} total</span> &nbsp;·&nbsp; Nearest-neighbour optimized`;
+    `<span style="color:#16a34a;font-weight:700">${list.length} outlets</span> &nbsp;·&nbsp; <span style="color:#2563eb;font-weight:700">🛣 ${fmtD(total)} total</span> &nbsp;·&nbsp; 2-Opt TSP optimized`;
   document.getElementById('ro-result').innerHTML = list.map((c,i)=>{
     const o=outlets.find(x=>x['Outlet code']===c);
     const distToNext = i<pairs.length ? pairs[i] : null;
@@ -1487,12 +2876,10 @@ function processPJPRows(rows){
   const resEl   = document.getElementById('pjp-imp-res');
 
   // ── 1. Build a case-insensitive header map from first row
-  // XLSX sometimes returns headers with trailing spaces or mixed case
   const headerKeys = rows.length ? Object.keys(rows[0]) : [];
-  const hmap = {}; // normalised_lower -> actual key in row
+  const hmap = {}; 
   headerKeys.forEach(k=>{ hmap[k.trim().toLowerCase()] = k; });
 
-  // Helper: get value from row by any of the candidate header names
   const getVal = (row, candidates) => {
     for(const c of candidates){
       const actual = hmap[c.toLowerCase()];
@@ -1502,7 +2889,7 @@ function processPJPRows(rows){
     return '';
   };
 
-  // Day header candidates (tolerant of case, spaces, full names)
+  // Day header candidates
   const dayHeaders = {
     Mon:['mon','monday','mon ','Monday','MON'],
     Tue:['tue','tuesday','tue ','Tuesday','TUE'],
@@ -1512,12 +2899,10 @@ function processPJPRows(rows){
     Sat:['sat','saturday','sat ','Saturday','SAT'],
   };
 
-  // Outlet code candidates
   const codeKeys = ['outlet code','outlet_code','code','outletcode'];
-  // EC candidates
   const ecKeys   = ['ec name','ec_name','ec','execution champion name','execution champion','exec champion'];
+  const weekKeys = ['week', 'week number', 'week no', 'wk'];
 
-  // Check if at least one day column exists
   const hasDayCols = DAYS.some(d=>dayHeaders[d].some(h=>hmap[h.toLowerCase()]));
   if(!hasDayCols){
     resEl.innerHTML=`<div style="padding:10px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;color:#dc2626;font-size:13px">
@@ -1527,7 +2912,7 @@ function processPJPRows(rows){
     return;
   }
 
-  // ── 2. Parse rows into buckets: { ecName: { Mon:[codes], … } }
+  // ── 2. Parse rows into buckets: { wk__ecName: { Mon:[codes], … } }
   const dayBuckets = {};
   let skippedNoCoord=0, skippedNoCode=0, skippedNoEC=0;
 
@@ -1542,14 +2927,38 @@ function processPJPRows(rows){
     const ecName = (ecRaw || defEC).trim();
     if(!ecName){ skippedNoEC++; return; }
 
-    if(!dayBuckets[ecName]) dayBuckets[ecName]={Mon:[],Tue:[],Wed:[],Thu:[],Fri:[],Sat:[]};
+    // Parse target weeks
+    let targetWeeks = [];
+    if (wk === 'all') {
+      let rowWkStr = getVal(r, weekKeys);
+      if (rowWkStr) {
+        const matches = rowWkStr.match(/[1-4]/g);
+        if (matches) {
+          targetWeeks = [...new Set(matches)];
+        }
+      }
+      if (targetWeeks.length === 0) {
+        targetWeeks = ['1', '2', '3', '4'];
+      }
+    } else {
+      targetWeeks = [wk];
+    }
 
-    DAYS.forEach(d=>{
-      const raw = getVal(r, dayHeaders[d]);
-      // Accept: 1, "1", "yes", "y", "true" → mark as visit
-      const isVisit = raw==='1' || raw===1 || raw.toLowerCase()==='yes'
-                   || raw.toLowerCase()==='y' || raw.toLowerCase()==='true';
-      if(isVisit) dayBuckets[ecName][d].push(code);
+    targetWeeks.forEach(w => {
+      const bucketKey = `${w}__${ecName}`;
+      if (!dayBuckets[bucketKey]) {
+        dayBuckets[bucketKey] = {Mon:[],Tue:[],Wed:[],Thu:[],Fri:[],Sat:[]};
+      }
+
+      DAYS.forEach(d=>{
+        const raw = getVal(r, dayHeaders[d]);
+        const isVisit = raw==='1' || raw===1 || (typeof raw === 'string' && (raw.toLowerCase()==='yes' || raw.toLowerCase()==='y' || raw.toLowerCase()==='true'));
+        if(isVisit) {
+          if (!dayBuckets[bucketKey][d].includes(code)) {
+            dayBuckets[bucketKey][d].push(code);
+          }
+        }
+      });
     });
   });
 
@@ -1562,23 +2971,27 @@ function processPJPRows(rows){
     return;
   }
 
-  // ── 3. Auto-add any new ECs to team.ecs so planner renders them
-  Object.keys(dayBuckets).forEach(ecName=>{
+  // ── 3. Auto-add any new ECs to team.ecs
+  Object.keys(dayBuckets).forEach(bucketKey=>{
+    const ecName = bucketKey.split('__')[1];
     if(!team.ecs.find(x=>x.name===ecName)){
-      // Try to infer BM from outlet data
       const sampleOutlet = outlets.find(o=>o['Execution Champion Name']===ecName);
       team.ecs.push({name:ecName, role:'ec', bm: sampleOutlet?sampleOutlet['BM Mapped']:''});
     }
   });
 
-  // ── 4. Optimize each EC × Day and write into pjp{}
+  // ── 4. Optimize and write into pjp{}
   let totalAdded=0, totalDays=0, log=[];
 
-  Object.entries(dayBuckets).forEach(([ecName, dayData])=>{
+  Object.entries(dayBuckets).forEach(([bucketKey, dayData])=>{
+    const parts = bucketKey.split('__');
+    const w = parts[0];
+    const ecName = parts[1];
+
     DAYS.forEach(d=>{
       const codes = dayData[d];
       if(!codes.length) return;
-      const key = `${wk}__${encodeKey(ecName)}__${d}`;
+      const key = `${w}__${encodeKey(ecName)}__${d}`;
       const optimized = nearestNeighbour(codes);
 
       if(overwrite || !pjp[key] || !pjp[key].length){
@@ -1588,49 +3001,58 @@ function processPJPRows(rows){
         optimized.forEach(c=>{ if(!existing.has(c)) pjp[key].push(c); });
       }
 
+      const ecOutlets = outlets.filter(o => o['Execution Champion Name'] === ecName && o.Latitude && o.Longitude);
+      const depotName = ecOutlets[0]?.Depot || '';
+      const mode = document.getElementById('pl-opt-mode')?.value || 'round_trip';
+      pjp[key] = optimizeRoute(pjp[key], depotName, mode);
+
       totalAdded += pjp[key].length;
       totalDays++;
 
-      let km=0;
-      const cur=pjp[key];
-      for(let i=0;i<cur.length-1;i++){
-        const a=outlets.find(x=>x['Outlet code']===cur[i]);
-        const b=outlets.find(x=>x['Outlet code']===cur[i+1]);
-        if(a&&b&&a.Latitude&&b.Latitude&&a.Latitude!==0)
-          km+=haversine(a.Latitude,a.Longitude,b.Latitude,b.Longitude);
-      }
-      log.push({ec:ecName, day:d, cnt:cur.length, km:km.toFixed(2)});
+      const km = calculateRouteDistance(pjp[key], depotName, mode);
+      log.push({wk: w, ec:ecName, day:d, cnt:pjp[key].length, km:km.toFixed(2)});
     });
   });
 
-  // ── 5. Refresh all UI — reset planner filters so all ECs show
+  // Save to localStorage
+  localStorage.setItem('pjp', JSON.stringify(pjp));
+
+  // ── 5. Refresh all UI
   populateSelects();
   document.getElementById('pl-bm').value = '';
   document.getElementById('pl-ec').value = '';
-  document.getElementById('pl-wk').value = wk;
+  if (wk !== 'all') {
+    document.getElementById('pl-wk').value = wk;
+  }
   updatePJPStatus();
   renderReport();
+  renderImportSuggestions();
 
   // ── 6. Render result summary
   const grouped = {};
-  log.forEach(l=>{ if(!grouped[l.ec]) grouped[l.ec]=[]; grouped[l.ec].push(l); });
+  log.forEach(l=>{ 
+    const k = `${l.wk}__${l.ec}`;
+    if(!grouped[k]) grouped[k]=[]; 
+    grouped[k].push(l); 
+  });
 
-  const ecCount = Object.keys(grouped).length;
+  const ecCount = [...new Set(log.map(l=>l.ec))].length;
   let html=`
   <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
     <div>
       <div style="font-size:13px;font-weight:700;color:#15803d">✅ Import & Route Optimization Complete!</div>
       <div style="font-size:12px;color:#374151;margin-top:3px">
-        Week <b>${wk}</b> &nbsp;·&nbsp; <b>${ecCount}</b> ECs &nbsp;·&nbsp; <b>${totalDays}</b> day-routes &nbsp;·&nbsp; <b>${totalAdded}</b> outlet visits planned
+        ${wk==='all'?'Whole Month Plan':`Week <b>${wk}</b>`} &nbsp;·&nbsp; <b>${ecCount}</b> ECs &nbsp;·&nbsp; <b>${totalDays}</b> day-routes &nbsp;·&nbsp; <b>${totalAdded}</b> outlet visits planned
         ${skippedNoCoord?`<span style="color:#f59e0b"> &nbsp;·&nbsp; ${skippedNoCoord} skipped (no coords)</span>`:''}
       </div>
     </div>
     <button class="btn bg sm" onclick="showTab('planner')" style="white-space:nowrap">→ PJP Planner Dekho</button>
   </div>
   <div style="overflow-x:auto">
-  <table style="width:100%;font-size:12px;border-collapse:collapse;min-width:560px">
+  <table style="width:100%;font-size:12px;border-collapse:collapse;min-width:600px">
   <thead>
     <tr style="background:#0f2744;color:#fff">
+      <th style="padding:7px 10px;text-align:left;border:1px solid #1e3a5f">Week</th>
       <th style="padding:7px 10px;text-align:left;border:1px solid #1e3a5f">EC Name</th>
       <th style="padding:7px 10px;border:1px solid #1e3a5f">Day</th>
       <th style="padding:7px 10px;border:1px solid #1e3a5f">Outlets</th>
@@ -1639,13 +3061,17 @@ function processPJPRows(rows){
     </tr>
   </thead><tbody>`;
 
-  Object.entries(grouped).forEach(([ecName, days], gi)=>{
+  Object.entries(grouped).forEach(([groupKey, days], gi)=>{
+    const parts = groupKey.split('__');
+    const w = parts[0];
+    const ecName = parts[1];
     days.forEach((l,li)=>{
-      const key=`${wk}__${encodeKey(l.ec)}__${l.day}`;
+      const key=`${w}__${encodeKey(l.ec)}__${l.day}`;
       const cur=pjp[key]||[];
       const preview=cur.slice(0,5).map(c=>`<span style="background:#dbeafe;color:#1e40af;border-radius:3px;padding:1px 4px;font-size:10px">${c}</span>`).join(' → ')+(cur.length>5?` <span style="color:#9ca3af">+${cur.length-5} more</span>`:'');
       const bg = gi%2===0?'#fff':'#f8fafc';
       html+=`<tr style="background:${bg}">
+        ${li===0?`<td style="padding:6px 10px;border:1px solid #e5e7eb;font-weight:700;color:#334155;vertical-align:top" rowspan="${days.length}">Week ${w}</td>`:''}
         ${li===0?`<td style="padding:6px 10px;border:1px solid #e5e7eb;font-weight:700;color:#1e40af;vertical-align:top" rowspan="${days.length}">👤 ${ecName}</td>`:''}
         <td style="padding:6px 10px;border:1px solid #e5e7eb;font-weight:600;white-space:nowrap">${l.day}</td>
         <td style="padding:6px 10px;border:1px solid #e5e7eb;text-align:center;font-weight:700;color:#2563eb">${l.cnt}</td>
@@ -1658,29 +3084,28 @@ function processPJPRows(rows){
   html+=`</tbody></table></div>`;
   resEl.innerHTML=html;
   document.getElementById('pjp-imp-go-btn').style.display='inline-flex';
-  toast(`✅ ${ecCount} ECs, ${totalDays} routes optimized & loaded into Planner!`,'success');
+  toast(`✅ PJP import and route optimization complete!`,'success');
 }
 
 // ── PJP Template download
 function dlPJPTemplate(){
   // Build template with all outlets as rows + day columns
-  const header=['Outlet Code','Outlet Name','Beat','BM Mapped','EC Name','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const header=['Week','Outlet Code','Outlet Name','Beat','BM Mapped','EC Name','Mon','Tue','Wed','Thu','Fri','Sat'];
   const sampleRows=outlets.slice(0,10).map((o,i)=>[
+    i < 5 ? 1 : 2, // Sample Week 1 or Week 2
     o['Outlet code'], o['Outlet name'], o.Beat, o['BM Mapped'], o['Execution Champion Name'],
-    i<3?1:0,  // Mon — first 3 as sample
+    i<3?1:0,  // Mon
     i>=3&&i<6?1:0, // Tue
     i>=6&&i<9?1:0, // Wed
     0,0,0
   ]);
-  // Create Excel with two sheets: Template + Instructions
   const wb = XLSX.utils.book_new();
 
   // Sheet 1: Template
   const wsData = [header, ...sampleRows];
-  // Append remaining outlets with all zeros for user to fill
-  outlets.slice(10).forEach(o=>wsData.push([o['Outlet code'],o['Outlet name'],o.Beat,o['BM Mapped'],o['Execution Champion Name'],0,0,0,0,0,0]));
+  outlets.slice(10).forEach(o=>wsData.push(['',o['Outlet code'],o['Outlet name'],o.Beat,o['BM Mapped'],o['Execution Champion Name'],0,0,0,0,0,0]));
   const ws = XLSX.utils.aoa_to_sheet(wsData);
-  ws['!cols']=[{wch:12},{wch:38},{wch:14},{wch:16},{wch:22},{wch:6},{wch:6},{wch:6},{wch:6},{wch:6},{wch:6}];
+  ws['!cols']=[{wch:6},{wch:12},{wch:38},{wch:14},{wch:16},{wch:22},{wch:6},{wch:6},{wch:6},{wch:6},{wch:6},{wch:6}];
   XLSX.utils.book_append_sheet(wb, ws, 'PJP Plan');
 
   // Sheet 2: Instructions
@@ -1688,6 +3113,7 @@ function dlPJPTemplate(){
     ['PJP Plan Import — Instructions'],
     [''],
     ['Column','Description'],
+    ['Week','Optional. Put 1, 2, 3, or 4 to assign visits to a specific week. If blank, visits are imported to the Week selected in the app (or all 4 weeks if "Whole Month" is selected).'],
     ['Outlet Code','Required. Must match outlet codes in the app.'],
     ['Outlet Name','Optional. For your reference only.'],
     ['Beat / BM Mapped','Optional. For your reference only.'],
@@ -1697,12 +3123,736 @@ function dlPJPTemplate(){
     ['Notes:'],
     ['- One outlet can appear on multiple days (mark 1 in each day column).'],
     ['- After uploading, the app runs nearest-neighbour route optimization per day automatically.'],
-    ['- The optimized route is loaded directly into the PJP Planner for the selected Week.'],
+    ['- The optimized route is loaded directly into the PJP Planner.'],
   ];
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(inst), 'Instructions');
 
   XLSX.writeFile(wb,'PJP_Plan_Template.xlsx');
   toast('Template downloaded ✓','success');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SMART OPTIMIZER & SUGGESTIONS ENGINE
+// ══════════════════════════════════════════════════════════════
+let previewMap = null;
+let previewLayers = [];
+let previewKey = null;
+
+// Select a planner cell and update suggestions panel
+function selectCell(key) {
+  activeCellKey = key;
+  document.querySelectorAll('.pce').forEach(el => el.classList.remove('selected'));
+  const el = document.getElementById('pce-' + key);
+  if (el) el.classList.add('selected');
+  renderSmartSuggestions();
+}
+
+// Get cross-EC reassignment recommendations
+function getReassignmentSuggestions() {
+  if (!activeCellKey) return [];
+  
+  const parts = activeCellKey.split('__');
+  if (parts.length < 3) return [];
+  const wk = parts[0];
+  const activeEc = decodeKey(parts[1]);
+  const day = parts[2];
+  
+  const currentScheduled = pjp[activeCellKey] || [];
+  if (currentScheduled.length === 0) return [];
+  
+  const getO = c => outlets.find(x => x['Outlet code'] === c);
+  const suggestions = [];
+  const ecs = team.ecs;
+  
+  currentScheduled.forEach(code => {
+    const o = getO(code);
+    if (!o || !o.Latitude || !o.Longitude) return;
+    
+    // Calculate min distance to own EC's other scheduled outlets
+    let minDistToOwn = Infinity;
+    currentScheduled.forEach(otherCode => {
+      if (otherCode === code) return;
+      const other = getO(otherCode);
+      if (other && other.Latitude && other.Longitude) {
+        const d = haversine(o.Latitude, o.Longitude, other.Latitude, other.Longitude);
+        if (d < minDistToOwn) minDistToOwn = d;
+      }
+    });
+    
+    // Fallback to depot distance if single stop
+    if (minDistToOwn === Infinity) {
+      const depot = getDepotCoordinate(o.Depot);
+      minDistToOwn = haversine(o.Latitude, o.Longitude, depot.lat, depot.lng);
+    }
+    
+    // Check all other ECs' routes on this day
+    ecs.forEach(otherEc => {
+      if (otherEc.name === activeEc) return;
+      
+      const otherKey = `${wk}__${encodeKey(otherEc.name)}__${day}`;
+      const otherScheduled = pjp[otherKey] || [];
+      if (otherScheduled.length === 0) return;
+      
+      let minDistToOther = Infinity;
+      otherScheduled.forEach(otherCode => {
+        const other = getO(otherCode);
+        if (other && other.Latitude && other.Longitude) {
+          const d = haversine(o.Latitude, o.Longitude, other.Latitude, other.Longitude);
+          if (d < minDistToOther) minDistToOther = d;
+        }
+      });
+      
+      // If the outlet is closer to the other EC's scheduled route than its current one
+      if (minDistToOther < minDistToOwn && minDistToOther < 8.0) {
+        // Limit suggestion if the target EC already has maxed workload (8 visits)
+        if (otherScheduled.length < 8) {
+          suggestions.push({
+            code: code,
+            name: o['Outlet name'],
+            fromEc: activeEc,
+            toEc: otherEc.name,
+            currentDist: minDistToOwn,
+            suggestedDist: minDistToOther,
+            fromKey: activeCellKey,
+            toKey: otherKey
+          });
+        }
+      }
+    });
+  });
+  
+  // Sort by distance savings descending
+  suggestions.sort((a, b) => (b.currentDist - b.suggestedDist) - (a.currentDist - a.suggestedDist));
+  return suggestions;
+}
+
+function getBulkReassignmentSuggestions() {
+  const list = [];
+  const getO = c => outlets.find(x => x['Outlet code'] === c);
+  const ecs = team.ecs;
+  const mode = document.getElementById('pl-opt-mode')?.value || 'round_trip';
+
+  [1, 2, 3, 4].forEach(wk => {
+    DAYS.forEach(day => {
+      // Pre-map routes to avoid redundant lookups
+      const ecRoutes = {};
+      ecs.forEach(ec => {
+        const key = `${wk}__${encodeKey(ec.name)}__${day}`;
+        ecRoutes[ec.name] = {
+          key: key,
+          codes: pjp[key] || [],
+          depot: outlets.filter(o => o['Execution Champion Name'] === ec.name && o.Latitude && o.Longitude)[0]?.Depot || ''
+        };
+      });
+
+      ecs.forEach(fromEc => {
+        const route = ecRoutes[fromEc.name];
+        if (route.codes.length === 0) return;
+
+        route.codes.forEach(code => {
+          const o = getO(code);
+          if (!o || !o.Latitude || !o.Longitude) return;
+
+          // Calculate min distance to own EC's other scheduled outlets
+          let minDistToOwn = Infinity;
+          route.codes.forEach(otherCode => {
+            if (otherCode === code) return;
+            const other = getO(otherCode);
+            if (other && other.Latitude && other.Longitude) {
+              const d = haversine(o.Latitude, o.Longitude, other.Latitude, other.Longitude);
+              if (d < minDistToOwn) minDistToOwn = d;
+            }
+          });
+
+          // Fallback to depot distance if single stop
+          if (minDistToOwn === Infinity) {
+            const depot = getDepotCoordinate(route.depot);
+            minDistToOwn = haversine(o.Latitude, o.Longitude, depot.lat, depot.lng);
+          }
+
+          // Check all other ECs
+          ecs.forEach(toEc => {
+            if (toEc.name === fromEc.name) return;
+
+            const otherRoute = ecRoutes[toEc.name];
+            if (otherRoute.codes.length === 0) return;
+
+            let minDistToOther = Infinity;
+            otherRoute.codes.forEach(otherCode => {
+              const other = getO(otherCode);
+              if (other && other.Latitude && other.Longitude) {
+                const d = haversine(o.Latitude, o.Longitude, other.Latitude, other.Longitude);
+                if (d < minDistToOther) minDistToOther = d;
+              }
+            });
+
+            // If outlet is closer to the other EC's route
+            if (minDistToOther < minDistToOwn && minDistToOther < 8.0) {
+              if (otherRoute.codes.length < 8) {
+                // Compute new route for suggested EC including this outlet
+                const testCodes = [...otherRoute.codes, code];
+                const optimizedTest = optimizeRoute(testCodes, otherRoute.depot, mode);
+
+                // Format suggested route (footroot)
+                const routeSequenceNames = optimizedTest.map((c, i) => {
+                  const out = getO(c);
+                  const nameStr = out ? shortName(out['Outlet name']) : c;
+                  return c === code ? `[${nameStr}]` : nameStr;
+                });
+                
+                let footrouteText = '';
+                const depotStr = otherRoute.depot ? shortName(otherRoute.depot) : 'Depot';
+                if (mode === 'round_trip') {
+                  footrouteText = `${depotStr} -> ` + routeSequenceNames.join(' -> ') + ` -> ${depotStr}`;
+                } else if (mode === 'one_way') {
+                  footrouteText = `${depotStr} -> ` + routeSequenceNames.join(' -> ');
+                } else {
+                  footrouteText = routeSequenceNames.join(' -> ');
+                }
+
+                list.push({
+                  week: wk,
+                  day: day,
+                  code: code,
+                  name: o['Outlet name'],
+                  fromEc: fromEc.name,
+                  toEc: toEc.name,
+                  currentDist: +minDistToOwn.toFixed(3),
+                  suggestedDist: +minDistToOther.toFixed(3),
+                  saved: +(minDistToOwn - minDistToOther).toFixed(3),
+                  footroute: footrouteText
+                });
+              }
+            }
+          });
+        });
+      });
+    });
+  });
+
+  list.sort((a, b) => b.saved - a.saved);
+  return list;
+}
+
+function applyReportTransfer(code, fromKey, toKey) {
+  applyTransferSuggestion(code, fromKey, toKey);
+  renderReport();
+  renderImportSuggestions();
+}
+
+function applyImportTransfer(code, fromKey, toKey) {
+  applyTransferSuggestion(code, fromKey, toKey);
+  renderImportSuggestions();
+  renderReport();
+}
+
+function applyAllReportTransfers() {
+  const suggestions = getBulkReassignmentSuggestions();
+  if (suggestions.length === 0) return toast('No suggestions to reassign!', 'info');
+  
+  if (!confirm(`Are you sure you want to reassign all ${suggestions.length} outlets to their optimal merchandisers?`)) return;
+  
+  const affectedKeys = new Set();
+  
+  suggestions.forEach(s => {
+    const fromKey = `${s.week}__${encodeKey(s.fromEc)}__${s.day}`;
+    const toKey = `${s.week}__${encodeKey(s.toEc)}__${s.day}`;
+    
+    if (pjp[fromKey]) {
+      pjp[fromKey] = pjp[fromKey].filter(c => c !== s.code);
+      affectedKeys.add(fromKey);
+    }
+    if (!pjp[toKey]) pjp[toKey] = [];
+    if (!pjp[toKey].includes(s.code)) {
+      pjp[toKey].push(s.code);
+      affectedKeys.add(toKey);
+    }
+  });
+  
+  const mode = document.getElementById('pl-opt-mode')?.value || 'round_trip';
+  const getEcAndDepot = (key) => {
+    const parts = key.split('__');
+    const ec = decodeKey(parts[1]);
+    const ecOutlets = outlets.filter(o => o['Execution Champion Name'] === ec && o.Latitude && o.Longitude);
+    const depot = ecOutlets[0]?.Depot || '';
+    return { ec, depot };
+  };
+  
+  affectedKeys.forEach(key => {
+    const info = getEcAndDepot(key);
+    pjp[key] = optimizeRoute(pjp[key], info.depot, mode);
+  });
+  
+  localStorage.setItem('pjp', JSON.stringify(pjp));
+  
+  renderPlanner();
+  renderReport();
+  renderImportSuggestions();
+  
+  toast(`Successfully reassigned all ${suggestions.length} outlets! ✓`, 'success');
+}
+
+function renderImportSuggestions() {
+  const impSugDiv = document.getElementById('pjp-imp-suggestions');
+  if (!impSugDiv) return;
+  const hasPJP = Object.values(pjp).some(v=>v.length>0);
+  if (!hasPJP) {
+    impSugDiv.innerHTML = '';
+    return;
+  }
+  const suggestions = getBulkReassignmentSuggestions();
+  if (suggestions.length > 0) {
+    let sugHtml = `
+    <div class="rc" style="border-left: 4px solid var(--color-blue); margin-top: 15px; background: var(--bg-secondary); padding: 16px; border-radius: 8px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+        <h3 style="font-size:14px; color:var(--text-primary); margin:0; display:flex; align-items:center; gap:8px;">👥 Smart Reassignment Suggestions Found (${suggestions.length})</h3>
+        <button class="btn bp sm" onclick="applyAllReportTransfers()" style="padding:4px 10px; font-size:11px; font-weight:700;">👥 Reassign All (${suggestions.length})</button>
+      </div>
+      <p style="font-size:12px; color:var(--text-secondary); margin-bottom:12px; line-height:1.4;">
+        The following scheduled outlets are geographically closer to another merchandiser's route on that day. Reassigning them would save total travel distance.
+      </p>
+      <div style="overflow-x:auto;">
+        <table style="width:100%; font-size:11px; border-collapse:collapse; min-width:600px;">
+          <thead>
+            <tr style="background:#0f2744; color:#fff; text-align:left;">
+              <th style="padding:6px;">Week & Day</th>
+              <th style="padding:6px;">Outlet</th>
+              <th style="padding:6px;">Current EC</th>
+              <th style="padding:6px;">Suggested EC</th>
+              <th style="padding:6px; white-space:nowrap;">Distance Saved</th>
+              <th style="padding:6px;">Suggested Footroute</th>
+              <th style="padding:6px; width:100px;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+    suggestions.slice(0, 10).forEach(s => {
+      sugHtml += `
+        <tr style="border-bottom:1px solid var(--border-color);">
+          <td style="padding:6px; white-space:nowrap;">Week ${s.week} — ${s.day}</td>
+          <td style="padding:6px;"><b>${s.code}</b><br><span style="font-size:10px;color:var(--text-secondary)">${shortName(s.name)}</span></td>
+          <td style="padding:6px; color:var(--color-red); font-weight:600;">${s.fromEc}</td>
+          <td style="padding:6px; color:var(--color-green); font-weight:600;">${s.toEc}</td>
+          <td style="padding:6px; font-weight:700; color:var(--color-green); white-space:nowrap;">Save ${s.saved.toFixed(1)} km</td>
+          <td style="padding:6px; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${esc(s.footroute)}"><code>${s.footroute}</code></td>
+          <td style="padding:6px;"><button class="btn bp sm" onclick="applyImportTransfer('${s.code}', '${s.week}__${encodeKey(s.fromEc)}__${s.day}', '${s.week}__${encodeKey(s.toEc)}__${s.day}')" style="padding:3px 6px; font-size:10px;">Reassign</button></td>
+        </tr>
+      `;
+    });
+    sugHtml += `
+          </tbody>
+        </table>
+      </div>
+      ${suggestions.length > 10 ? `<div style="font-size:11px; color:var(--text-muted); margin-top:8px; text-align:right;">Showing top 10 suggestions. Check the Reports tab or download Excel report for all ${suggestions.length} recommendations.</div>` : ''}
+    </div>
+    `;
+    impSugDiv.innerHTML = sugHtml;
+  } else {
+    impSugDiv.innerHTML = '<div style="background:#ecfdf5; border:1px solid #a7f3d0; color:#065f46; font-size:12px; padding:10px; border-radius:6px; margin-top:15px; font-weight:600;">✅ All outlets in this PJP file are optimally assigned according to merchandiser beats (0 routing conflicts found).</div>';
+  }
+}
+
+// Find unassigned outlets near the currently scheduled outlets in the selected cell
+function getNearbySuggestions() {
+  if (!activeCellKey) return [];
+  
+  const parts = activeCellKey.split('__');
+  if (parts.length < 3) return [];
+  const wk = parts[0];
+  const activeEc = decodeKey(parts[1]);
+  const day = parts[2];
+  
+  const currentScheduled = pjp[activeCellKey] || [];
+  const getO = c => outlets.find(x => x['Outlet code'] === c);
+  
+  const usedInWeek = new Set(Object.entries(pjp).filter(([k]) => k.startsWith(wk + '__')).flatMap(([, v]) => v));
+  const scheduledOnThisDay = new Set(Object.entries(pjp).filter(([k]) => k.endsWith('__' + day)).flatMap(([, v]) => v));
+  
+  // Exclude scheduled ones
+  const candidates = outlets.filter(o => {
+    return o.Latitude && o.Longitude && o.Latitude !== 0 &&
+           !currentScheduled.includes(o['Outlet code']) &&
+           !scheduledOnThisDay.has(o['Outlet code']);
+  });
+  
+  if (candidates.length === 0) return [];
+  
+  const list = [];
+  
+  if (currentScheduled.length > 0) {
+    candidates.forEach(o => {
+      let minDist = Infinity;
+      currentScheduled.forEach(scCode => {
+        const sc = getO(scCode);
+        if (sc && sc.Latitude && sc.Longitude) {
+          const d = haversine(o.Latitude, o.Longitude, sc.Latitude, sc.Longitude);
+          if (d < minDist) minDist = d;
+        }
+      });
+      if (minDist < 6.0) {
+        list.push({
+          code: o['Outlet code'],
+          name: o['Outlet name'],
+          beat: o.Beat,
+          dist: minDist,
+          isUnscheduled: !usedInWeek.has(o['Outlet code'])
+        });
+      }
+    });
+  } else {
+    // If route is empty, suggest closest outlets to default depot
+    const ecOutlets = outlets.filter(o => o['Execution Champion Name'] === activeEc && o.Latitude && o.Longitude);
+    const depotName = ecOutlets[0]?.Depot || '';
+    const depot = getDepotCoordinate(depotName);
+    
+    candidates.forEach(o => {
+      const d = haversine(o.Latitude, o.Longitude, depot.lat, depot.lng);
+      list.push({
+        code: o['Outlet code'],
+        name: o['Outlet name'],
+        beat: o.Beat,
+        dist: d,
+        isUnscheduled: !usedInWeek.has(o['Outlet code'])
+      });
+    });
+  }
+  
+  // Sort by distance ascending, prioritizing unscheduled ones
+  list.sort((a, b) => {
+    if (a.isUnscheduled && !b.isUnscheduled) return -1;
+    if (!a.isUnscheduled && b.isUnscheduled) return 1;
+    return a.dist - b.dist;
+  });
+  
+  return list.slice(0, 10);
+}
+
+// Render the smart suggestion cards in the right panel
+function renderSmartSuggestions() {
+  const sugTransfers = document.getElementById('sug-transfers');
+  const sugNearby = document.getElementById('sug-nearby');
+  if (!sugTransfers || !sugNearby) return;
+  
+  if (!activeCellKey) {
+    sugTransfers.innerHTML = '<div style="color:var(--text-muted); font-size:11px; text-align:center; padding:10px;">Select a planner cell to see transfer recommendations.</div>';
+    sugNearby.innerHTML = '<div style="color:var(--text-muted); font-size:11px; text-align:center; padding:10px;">Select a planner cell to see nearby outlets.</div>';
+    return;
+  }
+  
+  // 1. Cross-EC Transfers
+  const transfers = getReassignmentSuggestions();
+  if (transfers.length === 0) {
+    sugTransfers.innerHTML = '<div style="color:var(--text-muted); font-size:11px; text-align:center; padding:10px;">No transfer suggestions for this route.</div>';
+  } else {
+    sugTransfers.innerHTML = transfers.map(s => {
+      const saved = s.currentDist - s.suggestedDist;
+      return `<div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:8px; padding:10px; display:flex; flex-direction:column; gap:6px; transition:border-color 0.15s;" onmouseover="this.style.borderColor='var(--color-blue)'" onmouseout="this.style.borderColor='var(--border-color)'">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <span style="font-weight:700; color:var(--text-primary); font-size:11.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:140px;" title="${esc(s.name)}">${shortName(s.name)}</span>
+          <span style="font-size:9.5px; font-weight:700; color:var(--color-green); background:rgba(16,185,129,0.1); padding:2px 6px; border-radius:4px;">Save ${saved.toFixed(1)} km</span>
+        </div>
+        <div style="font-size:10.5px; color:var(--text-secondary); line-height:1.4">
+          Currently: <b>${s.fromEc}</b> (${s.currentDist.toFixed(1)} km away)<br>
+          Suggested: <b>${s.toEc}</b> (${s.suggestedDist.toFixed(1)} km away)
+        </div>
+        <button class="btn bp sm" onclick="applyTransferSuggestion('${s.code}', '${s.fromKey}', '${s.toKey}')" style="width:100%; padding:4px 0; font-size:10.5px; justify-content:center;">👥 Transfer to ${s.toEc}</button>
+      </div>`;
+    }).join('');
+  }
+  
+  // 2. Nearby Outlets to Add
+  const nearby = getNearbySuggestions();
+  if (nearby.length === 0) {
+    sugNearby.innerHTML = '<div style="color:var(--text-muted); font-size:11px; text-align:center; padding:10px;">No nearby outlets found.</div>';
+  } else {
+    sugNearby.innerHTML = nearby.map(n => {
+      return `<div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:8px; padding:10px; display:flex; flex-direction:column; gap:6px; transition:border-color 0.15s;" onmouseover="this.style.borderColor='var(--color-blue)'" onmouseout="this.style.borderColor='var(--border-color)'">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <span style="font-weight:700; color:var(--text-primary); font-size:11.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:140px;" title="${esc(n.name)}">${shortName(n.name)}</span>
+          <span style="font-size:9.5px; font-weight:600; color:var(--color-blue); background:rgba(59,130,246,0.1); padding:2px 6px; border-radius:4px;">${n.dist.toFixed(1)} km</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:10.5px; color:var(--text-secondary);">
+          <span>Beat: <b>${n.beat}</b></span>
+          ${n.isUnscheduled ? `<span style="color:var(--color-amber); font-weight:700; font-size:9px;">UNPLANNED</span>` : ''}
+        </div>
+        <button class="btn bg sm" onclick="addNearbyToRoute('${n.code}', '${activeCellKey}')" style="width:100%; padding:4px 0; font-size:10.5px; justify-content:center;">+ Add to Route</button>
+      </div>`;
+    }).join('');
+  }
+}
+
+// Transfer outlet between EC routes and optimize both
+function applyTransferSuggestion(code, fromKey, toKey) {
+  if (pjp[fromKey]) {
+    pjp[fromKey] = pjp[fromKey].filter(c => c !== code);
+  }
+  if (!pjp[toKey]) pjp[toKey] = [];
+  if (!pjp[toKey].includes(code)) {
+    pjp[toKey].push(code);
+  }
+  
+  const mode = document.getElementById('pl-opt-mode').value;
+  const getEcAndDepot = (key) => {
+    const parts = key.split('__');
+    const ec = decodeKey(parts[1]);
+    const ecOutlets = outlets.filter(o => o['Execution Champion Name'] === ec && o.Latitude && o.Longitude);
+    const depot = ecOutlets[0]?.Depot || '';
+    return { ec, depot };
+  };
+  
+  const fromInfo = getEcAndDepot(fromKey);
+  const toInfo = getEcAndDepot(toKey);
+  
+  pjp[fromKey] = optimizeRoute(pjp[fromKey], fromInfo.depot, mode);
+  pjp[toKey] = optimizeRoute(pjp[toKey], toInfo.depot, mode);
+  
+  renderPlanner();
+  selectCell(toKey);
+  toast(`Outlet successfully transferred to ${toInfo.ec} & routes re-optimized!`, 'success');
+}
+
+// Add nearby outlet to route and optimize
+function addNearbyToRoute(code, key) {
+  if (!pjp[key]) pjp[key] = [];
+  if (!pjp[key].includes(code)) {
+    pjp[key].push(code);
+  }
+  
+  const parts = key.split('__');
+  const ec = decodeKey(parts[1]);
+  const ecOutlets = outlets.filter(o => o['Execution Champion Name'] === ec && o.Latitude && o.Longitude);
+  const depotName = ecOutlets[0]?.Depot || '';
+  const mode = document.getElementById('pl-opt-mode').value;
+  
+  pjp[key] = optimizeRoute(pjp[key], depotName, mode);
+  
+  renderPlanner();
+  selectCell(key);
+  toast('Outlet added to route & optimized!', 'success');
+}
+
+// Cell Quick-Optimize function
+function quickOptimizeCell(key) {
+  const parts = key.split('__');
+  const ec = decodeKey(parts[1]);
+  const ecOutlets = outlets.filter(o => o['Execution Champion Name'] === ec && o.Latitude && o.Longitude);
+  const depotName = ecOutlets[0]?.Depot || '';
+  const mode = document.getElementById('pl-opt-mode').value;
+  
+  const beforeDist = calculateRouteDistance(pjp[key] || [], depotName, mode);
+  pjp[key] = optimizeRoute(pjp[key] || [], depotName, mode);
+  const afterDist = calculateRouteDistance(pjp[key] || [], depotName, mode);
+  
+  renderPlanner();
+  selectCell(key);
+  
+  if (beforeDist > afterDist + 0.01) {
+    const saved = beforeDist - afterDist;
+    toast(`Optimized! Saved ${saved.toFixed(2)} km ⚡`, 'success');
+  } else {
+    toast('Route is already optimal!', 'info');
+  }
+}
+
+// Optimize entire week's routes globally
+function optimizeAllRoutes() {
+  const wk = document.getElementById('pl-wk').value;
+  const mode = document.getElementById('pl-opt-mode').value;
+  
+  let routesCount = 0;
+  let totalBefore = 0;
+  let totalAfter = 0;
+  
+  team.ecs.forEach(ec => {
+    const ecOutlets = outlets.filter(o => o['Execution Champion Name'] === ec.name && o.Latitude && o.Longitude);
+    const depotName = ecOutlets[0]?.Depot || '';
+    
+    DAYS.forEach(d => {
+      const key = `${wk}__${encodeKey(ec.name)}__${d}`;
+      const codes = pjp[key] || [];
+      if (codes.length >= 2) {
+        const dBefore = calculateRouteDistance(codes, depotName, mode);
+        const opt = optimizeRoute(codes, depotName, mode);
+        const dAfter = calculateRouteDistance(opt, depotName, mode);
+        
+        pjp[key] = opt;
+        routesCount++;
+        totalBefore += dBefore;
+        totalAfter += dAfter;
+      }
+    });
+  });
+  
+  if (routesCount === 0) {
+    return toast('Weekly planner mein koi routes nahi hain jo optimize kiye ja sakein.', 'error');
+  }
+  
+  const saved = totalBefore - totalAfter;
+  const pct = totalBefore > 0 ? (saved / totalBefore) * 100 : 0;
+  
+  document.getElementById('opt-rep-routes').textContent = routesCount;
+  document.getElementById('opt-rep-before').textContent = `${totalBefore.toFixed(2)} km`;
+  document.getElementById('opt-rep-after').textContent = `${totalAfter.toFixed(2)} km`;
+  document.getElementById('opt-rep-saved').textContent = `${saved.toFixed(2)} km (${pct.toFixed(1)}%)`;
+  
+  openM('m-opt-report');
+  renderPlanner();
+}
+
+// Open Route Sequence Map Preview Modal
+function openRoutePreview(key) {
+  previewKey = key;
+  const parts = key.split('__');
+  const wk = parts[0];
+  const ec = decodeKey(parts[1]);
+  const day = parts[2];
+  
+  document.getElementById('route-preview-title').textContent = `📍 Route Sequence for ${ec} — Week ${wk} ${day}`;
+  openM('m-route-preview');
+  
+  setTimeout(() => {
+    if (!previewMap) {
+      previewMap = L.map('route-preview-map').setView([12.97, 77.70], 12);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(previewMap);
+    } else {
+      previewMap.invalidateSize();
+    }
+    renderPreviewModalContent();
+  }, 150);
+}
+
+// Render Preview Map Content
+function renderPreviewModalContent() {
+  if (!previewKey) return;
+  
+  const codes = pjp[previewKey] || [];
+  const parts = previewKey.split('__');
+  const ec = decodeKey(parts[1]);
+  
+  const getO = c => outlets.find(x => x['Outlet code'] === c);
+  const valid = codes.filter(c => {
+    const o = getO(c);
+    return o && o.Latitude && o.Longitude;
+  });
+  
+  const ecOutlets = outlets.filter(o => o['Execution Champion Name'] === ec && o.Latitude && o.Longitude);
+  const depotName = ecOutlets[0]?.Depot || '';
+  const mode = document.getElementById('pl-opt-mode').value;
+  
+  const totDist = calculateRouteDistance(codes, depotName, mode);
+  const distStr = totDist < 1 ? (totDist * 1000).toFixed(0) + ' m' : totDist.toFixed(2) + ' km';
+  
+  document.getElementById('route-preview-stats').innerHTML = `
+    <b>Stops:</b> ${codes.length} &nbsp;·&nbsp; 
+    <b>Distance:</b> ${distStr} &nbsp;·&nbsp; 
+    <b>Mode:</b> ${mode.replace('_', ' ')}
+  `;
+  
+  const gmapsBtn = document.getElementById('route-preview-gmaps');
+  gmapsBtn.href = generateGoogleMapsLink(codes, depotName, mode);
+  
+  const optBtn = document.getElementById('route-preview-opt-btn');
+  optBtn.onclick = () => {
+    pjp[previewKey] = optimizeRoute(pjp[previewKey], depotName, mode);
+    renderPreviewModalContent();
+    renderPlanner();
+    toast('Route optimized using 2-Opt! ⚡', 'success');
+  };
+  
+  const listEl = document.getElementById('route-preview-stops');
+  if (codes.length === 0) {
+    listEl.innerHTML = '<div style="color:var(--text-muted); font-size:12px; text-align:center; padding:20px;">No outlets planned for this day.</div>';
+  } else {
+    listEl.innerHTML = codes.map((c, i) => {
+      const o = getO(c);
+      const name = o ? o['Outlet name'] : c;
+      const isFirst = i === 0;
+      const isLast = i === codes.length - 1;
+      
+      return `<div style="display:flex; align-items:center; gap:8px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:8px; padding:6px 10px; margin-bottom:6px;">
+        <div style="width:20px; height:20px; border-radius:50%; background:var(--color-blue); color:#fff; font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0;">${i+1}</div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:10px; color:var(--color-blue); font-weight:700;">${c}</div>
+          <div style="font-size:11.5px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-primary);" title="${esc(name)}">${shortName(name)}</div>
+        </div>
+        <div style="display:flex; gap:3px;">
+          <button onclick="moveStop('${previewKey}', ${i}, -1)" ${isFirst ? 'disabled' : ''} style="background:none; border:none; color:var(--text-secondary); cursor:pointer; font-size:12px; padding:2px;">▲</button>
+          <button onclick="moveStop('${previewKey}', ${i}, 1)" ${isLast ? 'disabled' : ''} style="background:none; border:none; color:var(--text-secondary); cursor:pointer; font-size:12px; padding:2px;">▼</button>
+          <button onclick="removeStopFromPreview('${previewKey}', '${c}')" style="background:none; border:none; color:var(--color-red); cursor:pointer; font-size:14px; padding:2px; font-weight:bold;">×</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  
+  previewLayers.forEach(l => { try { previewMap.removeLayer(l); } catch(e) {} });
+  previewLayers = [];
+  
+  const pts = valid.map(c => getO(c));
+  if (pts.length === 0) return;
+  
+  let latlngs = [];
+  let depot = null;
+  
+  if (mode !== 'none') {
+    depot = getDepotCoordinate(depotName);
+    latlngs.push([depot.lat, depot.lng]);
+    
+    const dIcon = L.divIcon({
+      className: '',
+      html: `<div style="background:var(--color-amber); color:#000; border-radius:4px; padding:2px 6px; font-size:9px; font-weight:800; border:1.5px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.3)">DEPOT</div>`,
+      iconSize: [40, 18], iconAnchor: [20, 9]
+    });
+    const dMarker = L.marker([depot.lat, depot.lng], { icon: dIcon }).addTo(previewMap);
+    dMarker.bindPopup(`<b>Depot: ${depotName || 'Default'}</b>`);
+    previewLayers.push(dMarker);
+  }
+  
+  pts.forEach((o, i) => {
+    latlngs.push([o.Latitude, o.Longitude]);
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="background:var(--color-blue); color:#fff; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; border:1.5px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.3)">${i+1}</div>`,
+      iconSize: [20, 20], iconAnchor: [10, 10]
+    });
+    const m = L.marker([o.Latitude, o.Longitude], { icon }).addTo(previewMap);
+    m.bindPopup(`<b>#${i+1} ${o['Outlet name']}</b><br><span style="font-size:11px; color:var(--text-secondary)">Code: ${o['Outlet code']}</span>`);
+    previewLayers.push(m);
+  });
+  
+  if (mode === 'round_trip' && depot) {
+    latlngs.push([depot.lat, depot.lng]);
+  }
+  
+  if (latlngs.length >= 2) {
+    const poly = L.polyline(latlngs, { color: 'var(--color-blue)', weight: 3, opacity: 0.8 }).addTo(previewMap);
+    previewLayers.push(poly);
+    previewMap.fitBounds(poly.getBounds(), { padding: [40, 40] });
+  } else if (latlngs.length === 1) {
+    previewMap.setView(latlngs[0], 14);
+  }
+}
+
+// Move stop in sequence (reorder)
+function moveStop(key, index, direction) {
+  const codes = pjp[key] || [];
+  const targetIndex = index + direction;
+  if (targetIndex < 0 || targetIndex >= codes.length) return;
+  
+  const temp = codes[index];
+  codes[index] = codes[targetIndex];
+  codes[targetIndex] = temp;
+  pjp[key] = codes;
+  
+  renderPreviewModalContent();
+  renderPlanner();
+}
+
+// Remove stop directly from preview modal list
+function removeStopFromPreview(key, code) {
+  if (!confirm('Remove this outlet from today\'s schedule?')) return;
+  pjp[key] = (pjp[key] || []).filter(c => c !== code);
+  renderPreviewModalContent();
+  renderPlanner();
 }
 
 init();
