@@ -851,10 +851,6 @@ tr:hover td {
   #tab-report { display: block !important; height: auto; overflow: visible; }
   .topbar { display: none; }
 }
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
 </style>
 </head>
 <body>
@@ -891,9 +887,6 @@ tr:hover td {
     </div>
     <div class="ni" data-tab="report" onclick="showTab('report')">
       <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Reports
-    </div>
-    <div class="ni" data-tab="balancer" onclick="showTab('balancer')">
-      <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg> PJP Balancer
     </div>
     <div class="ng">System</div>
     <div class="ni" data-tab="admin" onclick="showTab('admin')">
@@ -1251,78 +1244,6 @@ tr:hover td {
       <h3>⭐ EC-wise Summary</h3>
       <table><thead><tr><th>Exec Champion</th><th>BM</th><th>Outlets</th><th>Beats</th><th>PJP Days Planned</th></tr></thead><tbody id="ec-tbody"></tbody></table>
     </div>
-  </div>
-</div>
-
-<!-- PJP BALANCER TAB -->
-<div class="tc" id="tab-balancer">
-  <div class="topbar">
-    <h2>⚖ PJP Balancer & Workload Optimizer</h2>
-  </div>
-  <div style="padding:24px; overflow-y:auto; flex:1; display:grid; grid-template-columns:1fr 1.2fr; gap:24px; align-content:start;">
-    
-    <!-- Left Side: Config Card -->
-    <div class="rc" style="margin: 0; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);">
-      <h3>⚡ Run Balancer Engine</h3>
-      <p style="font-size:12px; color:var(--text-secondary); margin-bottom:18px; line-height:1.5;">
-        Configure the headcount and upload a store file (.csv / .xlsx) containing coordinates and visit frequencies to generate a mathematically balanced PJP schedule.
-      </p>
-      
-      <div class="fr">
-        <label>Merchandisers Count (N >= 9) *</label>
-        <input type="number" id="bal-num-merch" value="9" min="9" placeholder="e.g. 9, 10, 12">
-      </div>
-      
-      <div class="fr" style="margin-bottom:20px">
-        <label>Store Master File (.csv / .xlsx) *</label>
-        <div class="uz" id="uz-balancer" ondragover="event.preventDefault(); this.classList.add('drag-active')" ondragleave="this.classList.remove('drag-active')" ondrop="event.preventDefault(); balancerDropFile(event);" onclick="document.getElementById('bal-file-input').click()">
-          <div style="font-size:32px">📊</div>
-          <p style="color:#6b7280; font-size:13px; margin-top:8px" id="bal-file-label">Click or drag & drop store file</p>
-          <p style="color:#9ca3af; font-size:11px; margin-top:4px">Required columns: <code>Outlet code, Outlet name, Beat, LAT, LONG, Actaul Frequency</code></p>
-        </div>
-        <input type="file" id="bal-file-input" accept=".csv,.xlsx,.xls" style="display:none" onchange="balancerFileSelected(event)">
-      </div>
-      
-      <button class="btn bp" id="bal-run-btn" onclick="runPJPBalancer('excel')" style="width:100%; font-weight:700; height:42px; display:inline-flex; align-items:center; justify-content:center; gap:10px;">
-        <svg id="bal-spinner" style="display:none; width:18px; height:18px; animation: spin 1s linear infinite;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-        <span id="bal-btn-text">Generate & Download Excel Matrix</span>
-      </button>
-      
-      <button class="btn bg" id="bal-load-btn" onclick="runPJPBalancer('json')" style="width:100%; font-weight:700; height:42px; display:inline-flex; align-items:center; justify-content:center; gap:10px; margin-top:10px;">
-        <svg id="bal-load-spinner" style="display:none; width:18px; height:18px; animation: spin 1s linear infinite;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-        <span id="bal-load-btn-text">Load directly into PJP Planner & Map</span>
-      </button>
-      
-      <div id="bal-status" style="margin-top:14px; display:none;"></div>
-    </div>
-    
-    <!-- Right Side: Details & Documentation -->
-    <div class="rc" style="margin: 0; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);">
-      <h3>📋 Setup & Optimization Logic</h3>
-      <div style="font-size:12.5px; color:var(--text-secondary); line-height:1.7; display:flex; flex-direction:column; gap:12px;">
-        <div>
-          <b style="color:var(--color-blue)">1. Parse & Cast Engine:</b>
-          The script parses the input file, cleans missing values, and casts 'Outlet code' and 'Actaul Frequency' to integers, and coordinates (LAT/LONG) to 64-bit floats.
-        </div>
-        <div>
-          <b style="color:var(--color-blue)">2. Geographic Clustering (KMeans):</b>
-          Uses scikit-learn's KMeans model, weighted by Actual Frequency as sample weights, to compute optimal operational centroids across all outlet coordinates.
-        </div>
-        <div>
-          <b style="color:var(--color-blue)">3. Greedy Balancing Loop:</b>
-          Assigns stores to centroids and refines them so the total frequency for any merchandiser is within <b>+/- 5%</b> of the global average (Total Frequency / Headcount). If an outlet stretches a territory's boundary, it automatically shifts it to a neighboring territory.
-        </div>
-        <div>
-          <b style="color:var(--color-blue)">4. Dynamic Date spacing:</b>
-          Generates 24 working days (excluding Sundays) starting from June 2026. Spaces outlet visits (frequencies of 2, 4, 8, 12, 24) mathematically across the 24 days to eliminate workload clumping.
-        </div>
-        <div>
-          <b style="color:var(--color-blue)">5. Openpyxl Excel Output:</b>
-          Creates a multi-tab workbook with styled zebra striping, green highlight for visits, auto-adjusted column widths, and an Executive Dashboard.
-        </div>
-      </div>
-    </div>
-    
   </div>
 </div>
 
@@ -2812,7 +2733,7 @@ document.addEventListener('click',e=>{if(e.target.classList.contains('mo'))e.tar
 window.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.mo.open').forEach(m=>m.classList.remove('open'));});
 
 function showTab(t){
-  const TAB_ORDER = ['map', 'planner', 'outlets', 'team', 'sku', 'optimizer', 'import', 'report', 'balancer', 'admin'];
+  const TAB_ORDER = ['map', 'planner', 'outlets', 'team', 'sku', 'optimizer', 'import', 'report', 'admin'];
   const idx = TAB_ORDER.indexOf(t);
 
   document.querySelectorAll('.tc').forEach(el=>el.classList.remove('active'));
@@ -4438,19 +4359,12 @@ function saveAdminConfig() {
 }
 
 function loadAdminConfig() {
-  const url = localStorage.getItem('cfg_gas_url') || 'https://script.google.com/macros/s/AKfycbyRYUpe9nD80CFOu5MfmAWiGa3-9inuQs0PhlzbISzMyPykjMSDfzxhv11mRjRSbve0/exec';
-  const token = localStorage.getItem('cfg_gas_token') || 'admin123';
+  const url = localStorage.getItem('cfg_gas_url') || '';
+  const token = localStorage.getItem('cfg_gas_token') || '';
   const urlInput = document.getElementById('cfg-gas-url');
   const tokenInput = document.getElementById('cfg-gas-token');
   if (urlInput) urlInput.value = url;
   if (tokenInput) tokenInput.value = token;
-  
-  if (!localStorage.getItem('cfg_gas_url')) {
-    localStorage.setItem('cfg_gas_url', url);
-  }
-  if (!localStorage.getItem('cfg_gas_token')) {
-    localStorage.setItem('cfg_gas_token', token);
-  }
 }
 
 function updateConnectionBadge(text, color) {
@@ -4632,159 +4546,6 @@ function copyGASCode() {
     .catch(() => toast('Copy failed', 'error'));
 }
 
-
-// ══════════════════════════════════════════════════════════════
-//  PJP BALANCER UI ACTIONS
-// ══════════════════════════════════════════════════════════════
-let balancerFile = null;
-
-function balancerDropFile(e) {
-  const file = e.dataTransfer.files[0];
-  if (file) {
-    balancerFile = file;
-    document.getElementById('bal-file-label').innerHTML = `Selected: <b>${file.name}</b>`;
-    const area = document.getElementById('uz-balancer');
-    area.style.borderColor = 'var(--color-blue)';
-    area.style.background = 'rgba(59, 130, 246, 0.04)';
-  }
-}
-
-function balancerFileSelected(e) {
-  const file = e.target.files[0];
-  if (file) {
-    balancerFile = file;
-    document.getElementById('bal-file-label').innerHTML = `Selected: <b>${file.name}</b>`;
-    const area = document.getElementById('uz-balancer');
-    area.style.borderColor = 'var(--color-blue)';
-    area.style.background = 'rgba(59, 130, 246, 0.04)';
-  }
-}
-
-function runPJPBalancer(mode) {
-  const numMerchInput = document.getElementById('bal-num-merch');
-  const numMerch = parseInt(numMerchInput.value);
-  const statusEl = document.getElementById('bal-status');
-  
-  const spinner = document.getElementById('bal-spinner');
-  const btnText = document.getElementById('bal-btn-text');
-  const runBtn = document.getElementById('bal-run-btn');
-  
-  const loadSpinner = document.getElementById('bal-load-spinner');
-  const loadBtnText = document.getElementById('bal-load-btn-text');
-  const loadBtn = document.getElementById('bal-load-btn');
-
-  if (isNaN(numMerch) || numMerch < 9) {
-    toast('Merchandisers count must be 9 or more!', 'error');
-    return;
-  }
-  if (!balancerFile) {
-    toast('Please upload a store list file first!', 'error');
-    return;
-  }
-
-  // Set loading states
-  runBtn.disabled = true;
-  loadBtn.disabled = true;
-  
-  if (mode === 'excel') {
-    spinner.style.display = 'inline-block';
-    btnText.textContent = 'Generating Excel...';
-  } else {
-    loadSpinner.style.display = 'inline-block';
-    loadBtnText.textContent = 'Importing to Map...';
-  }
-  
-  statusEl.style.display = 'block';
-  statusEl.innerHTML = `<div style="padding:10px; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.15); border-radius:6px; color:var(--color-amber)">Running clustering & workload balancing solver on Python backend...</div>`;
-
-  const formData = new FormData();
-  formData.append('file', balancerFile);
-  formData.append('num_merch', numMerch);
-  formData.append('format_type', mode);
-
-  fetch('/api/generate-pjp', {
-    method: 'POST',
-    body: formData
-  })
-  .then(response => {
-    if (!response.ok) {
-      return response.json().then(err => { throw new Error(err.detail || 'Server error'); });
-    }
-    return mode === 'json' ? response.json() : response.blob();
-  })
-  .then(data => {
-    // Reset button states
-    runBtn.disabled = false;
-    loadBtn.disabled = false;
-    spinner.style.display = 'none';
-    loadSpinner.style.display = 'none';
-    btnText.textContent = 'Generate & Download Excel Matrix';
-    loadBtnText.textContent = 'Load directly into PJP Planner & Map';
-
-    if (mode === 'json') {
-      // Overwrite portal's active data store
-      if (data.outlets && data.team && data.pjp) {
-        outlets = data.outlets;
-        team = data.team;
-        pjp = data.pjp;
-        
-        // Clear SKU list and other custom structures
-        skus = {};
-        
-        // Save to local storage for persistence
-        localStorage.setItem('outlets', JSON.stringify(outlets));
-        localStorage.setItem('team', JSON.stringify(team));
-        localStorage.setItem('pjp', JSON.stringify(pjp));
-        localStorage.setItem('skus', JSON.stringify(skus));
-        
-        // Re-run initialization to reconstruct UI components and markers
-        buildBeatColors();
-        initMap();
-        populateSelects();
-        renderOT(); 
-        renderSKUT(); 
-        renderTeam(); 
-        renderReport();
-        renderImportSuggestions();
-        
-        document.getElementById('total-count').textContent = outlets.length;
-        
-        statusEl.innerHTML = `<div style="padding:10px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.15); border-radius:6px; color:var(--color-green); font-weight:600">✅ PJP loaded! Redirecting to Map...</div>`;
-        
-        setTimeout(() => {
-          showTab('map');
-          toast('Balanced PJP loaded into Map & Planner successfully! 🗺', 'success');
-        }, 800);
-      } else {
-        throw new Error('Invalid JSON response format from backend.');
-      }
-    } else {
-      // Excel mode - Download spreadsheet
-      statusEl.innerHTML = `<div style="padding:10px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.15); border-radius:6px; color:var(--color-green); font-weight:600">✅ Balanced Excel generated! Downloading...</div>`;
-      
-      const url = window.URL.createObjectURL(data);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'PJP_Balanced_Matrix.xlsx';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-      toast('Balanced PJP downloaded successfully ✓', 'success');
-    }
-  })
-  .catch(err => {
-    runBtn.disabled = false;
-    loadBtn.disabled = false;
-    spinner.style.display = 'none';
-    loadSpinner.style.display = 'none';
-    btnText.textContent = 'Generate & Download Excel Matrix';
-    loadBtnText.textContent = 'Load directly into PJP Planner & Map';
-    
-    statusEl.innerHTML = `<div style="padding:10px; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.15); border-radius:6px; color:var(--color-red)">❌ Error: ${err.message}</div>`;
-    toast('Optimization failed: ' + err.message, 'error');
-  });
-}
 
 init();
 </script>
