@@ -888,6 +888,10 @@ tr:hover td {
     <div class="ni" data-tab="report" onclick="showTab('report')">
       <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Reports
     </div>
+    <div class="ng">System</div>
+    <div class="ni" data-tab="admin" onclick="showTab('admin')">
+      <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Admin Portal
+    </div>
   </nav>
   <div id="sb-footer">
     <div style="font-size:11px;color:var(--text-secondary)">Total Outlets</div>
@@ -1061,9 +1065,9 @@ tr:hover td {
   <div class="topbar">
     <h2>🧭 Route Optimizer</h2>
     <div class="ta">
-      <select id="ro-bm" onchange="roFilterOutlets()" style="padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px"><option value="">All BMs</option></select>
-      <select id="ro-beat" onchange="roFilterOutlets()" style="padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px"><option value="">All Beats</option></select>
-      <select id="ro-ec" onchange="roFilterOutlets()" style="padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px"><option value="">All ECs</option></select>
+      <select id="ro-bm" onchange="roFilterOutlets()" style="padding:6px 10px;border:1px solid var(--border-color);border-radius:6px;font-size:13px;background:var(--bg-card);color:var(--text-primary)"><option value="">All BMs</option></select>
+      <select id="ro-beat" onchange="roFilterOutlets()" style="padding:6px 10px;border:1px solid var(--border-color);border-radius:6px;font-size:13px;background:var(--bg-card);color:var(--text-primary)"><option value="">All Beats</option></select>
+      <select id="ro-ec" onchange="roFilterOutlets()" style="padding:6px 10px;border:1px solid var(--border-color);border-radius:6px;font-size:13px;background:var(--bg-card);color:var(--text-primary)"><option value="">All ECs</option></select>
       <button class="btn bp sm" onclick="runOptimizer()">🧭 Optimize Route</button>
       <button class="btn bs sm" onclick="roClearSel()">✕ Clear</button>
     </div>
@@ -1071,10 +1075,10 @@ tr:hover td {
   <div style="flex:1;display:flex;overflow:hidden;gap:0">
 
     <!-- LEFT: outlet picker -->
-    <div style="width:280px;flex-shrink:0;border-right:1px solid #e5e7eb;background:#fff;display:flex;flex-direction:column">
-      <div style="padding:10px 12px 6px;border-bottom:1px solid #f1f5f9">
-        <div style="font-size:12px;font-weight:600;color:#4b5563;margin-bottom:6px">Select Outlets <span id="ro-sel-cnt" style="color:#3b82f6;font-weight:700"></span></div>
-        <input id="ro-q" type="text" placeholder="Search name / code..." oninput="roFilterOutlets()" style="width:100%;padding:6px 8px;border:1px solid #d1d5db;border-radius:5px;font-size:12px;outline:none;box-sizing:border-box">
+    <div style="width:280px;flex-shrink:0;border-right:1px solid var(--border-color);background:var(--bg-secondary);display:flex;flex-direction:column">
+      <div style="padding:10px 12px 6px;border-bottom:1px solid var(--border-color)">
+        <div style="font-size:12px;font-weight:600;color:var(--text-primary);margin-bottom:6px">Select Outlets <span id="ro-sel-cnt" style="color:var(--color-blue);font-weight:700"></span></div>
+        <input id="ro-q" type="text" placeholder="Search name / code..." oninput="roFilterOutlets()" style="width:100%;padding:6px 8px;border:1px solid var(--border-color);border-radius:5px;font-size:12px;outline:none;box-sizing:border-box;background:var(--bg-primary);color:var(--text-primary)">
         <div style="display:flex;gap:6px;margin-top:6px">
           <button class="btn bs sm" style="flex:1;font-size:11px" onclick="roSelectAll()">Select All</button>
           <button class="btn bs sm" style="flex:1;font-size:11px" onclick="roClearSel()">Clear All</button>
@@ -1084,21 +1088,24 @@ tr:hover td {
     </div>
 
     <!-- MIDDLE: optimized result -->
-    <div style="width:320px;flex-shrink:0;border-right:1px solid #e5e7eb;background:#f8fafc;display:flex;flex-direction:column">
-      <div style="padding:10px 14px 8px;border-bottom:1px solid #e5e7eb;background:#fff">
-        <div style="font-size:12px;font-weight:700;color:#111827">📍 Optimized Route</div>
-        <div id="ro-summary" style="font-size:11px;color:#6b7280;margin-top:2px">Select outlets → click Optimize</div>
+    <div style="width:320px;flex-shrink:0;border-right:1px solid var(--border-color);background:var(--bg-secondary);display:flex;flex-direction:column">
+      <div style="padding:10px 14px 8px;border-bottom:1px solid var(--border-color);background:var(--bg-card);display:flex;justify-content:space-between;align-items:center;height:52px">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--text-primary)">📍 Optimized Route</div>
+          <div id="ro-summary" style="font-size:11px;color:var(--text-secondary);margin-top:2px">Select outlets → click Optimize</div>
+        </div>
+        <button class="btn bw sm" onclick="roReassignAllSelected()" style="display:none;padding:4px 8px;font-size:11px" id="ro-reassign-all-btn">👥 Reassign All</button>
       </div>
       <div id="ro-result" style="flex:1;overflow-y:auto;padding:10px 12px"></div>
       <!-- Send to Planner -->
-      <div style="padding:10px 12px;border-top:1px solid #e5e7eb;background:#fff">
-        <div style="font-size:11px;font-weight:600;color:#4b5563;margin-bottom:6px">Send optimized route to PJP Planner</div>
+      <div style="padding:10px 12px;border-top:1px solid var(--border-color);background:var(--bg-card)">
+        <div style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">Send optimized route to PJP Planner</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <select id="ro-send-ec" style="flex:1;padding:6px 8px;border:1px solid #d1d5db;border-radius:5px;font-size:12px;outline:none"><option value="">Select EC</option></select>
-          <select id="ro-send-wk" style="padding:6px 8px;border:1px solid #d1d5db;border-radius:5px;font-size:12px;outline:none">
+          <select id="ro-send-ec" style="flex:1;padding:6px 8px;border:1px solid var(--border-color);border-radius:5px;font-size:12px;outline:none;background:var(--bg-primary);color:var(--text-primary)"><option value="">Select EC</option></select>
+          <select id="ro-send-wk" style="padding:6px 8px;border:1px solid var(--border-color);border-radius:5px;font-size:12px;outline:none;background:var(--bg-primary);color:var(--text-primary)">
             <option value="1">Week 1</option><option value="2">Week 2</option><option value="3">Week 3</option><option value="4">Week 4</option>
           </select>
-          <select id="ro-send-day" style="padding:6px 8px;border:1px solid #d1d5db;border-radius:5px;font-size:12px;outline:none">
+          <select id="ro-send-day" style="padding:6px 8px;border:1px solid var(--border-color);border-radius:5px;font-size:12px;outline:none;background:var(--bg-primary);color:var(--text-primary)">
             <option>Mon</option><option>Tue</option><option>Wed</option><option>Thu</option><option>Fri</option><option>Sat</option>
           </select>
         </div>
@@ -1152,7 +1159,7 @@ tr:hover td {
       <p style="font-size:12px;color:#6b7280;margin-bottom:12px">
         Excel mein har outlet ke samne <b>Mon, Tue, Wed, Thu, Fri, Sat</b> column mein <b>1</b> (visit) ya <b>0</b> (skip) likho.
         Upload ke baad system har din ke outlets ko <b>nearest-neighbour algorithm</b> se optimize karke PJP Planner mein automatically daal dega.
-        <br>Optional column: <b>EC Name</b> �      <!-- Settings row -->
+        <br>Optional column: <b>EC Name</b> �      <!-- Settings row -->
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:flex-end">
         <div>
           <div style="font-size:11px;font-weight:600;color:#4b5563;margin-bottom:4px">Upload Mode</div>
@@ -1205,7 +1212,6 @@ tr:hover td {
     </div>
 
   </div>
-</div>
 
 <!-- REPORT TAB -->
 <div class="tc" id="tab-report">
@@ -1237,6 +1243,116 @@ tr:hover td {
     <div class="rc">
       <h3>⭐ EC-wise Summary</h3>
       <table><thead><tr><th>Exec Champion</th><th>BM</th><th>Outlets</th><th>Beats</th><th>PJP Days Planned</th></tr></thead><tbody id="ec-tbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN PORTAL TAB -->
+<div class="tc" id="tab-admin">
+  <div class="topbar">
+    <h2>⚙ Admin Portal</h2>
+    <div class="ta" id="admin-topbar-actions" style="display:none">
+      <span class="badge" id="admin-conn-badge" style="background:rgba(239,68,68,0.15);color:var(--color-red);border:1px solid rgba(239,68,68,0.25)">Not Configured</span>
+      <button class="btn bs sm" onclick="checkBackendConnection()">🔄 Test Connection</button>
+      <button class="btn bg sm" onclick="pullFromGoogleSheets()">📥 Pull Data</button>
+      <button class="btn bp sm" onclick="pushToGoogleSheets()">📤 Push Data</button>
+      <button class="btn bd sm" onclick="adminLogout()">✕ Logout</button>
+    </div>
+  </div>
+  
+  <div style="flex:1;overflow-y:auto;padding:24px;display:flex;align-items:center;justify-content:center" id="admin-login-view">
+    <div class="rc" style="width:100%;max-width:400px;margin:0;box-shadow:0 10px 40px rgba(0,0,0,0.5)">
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:48px;margin-bottom:10px">🔐</div>
+        <h3>Admin Authentication</h3>
+        <p style="font-size:12px;color:var(--text-secondary);margin-top:4px">Enter administrator password to access backend sync settings.</p>
+      </div>
+      <div class="fr">
+        <label>Admin Password</label>
+        <input type="password" id="admin-pw" placeholder="Enter password..." onkeydown="if(event.key==='Enter')adminLogin()">
+      </div>
+      <button class="btn bp" onclick="adminLogin()" style="width:100%;font-weight:700">Login</button>
+      <div id="admin-login-error" style="color:var(--color-red);font-size:12px;margin-top:10px;text-align:center;display:none">⚠ Incorrect password. Try again.</div>
+    </div>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;padding:20px;display:none;grid-template-columns:1fr 1.2fr;gap:20px;align-content:start" id="admin-dashboard-view">
+    <!-- Configuration Column -->
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <div class="rc">
+        <h3>🔗 Google Sheets Connection Settings</h3>
+        <p style="font-size:12px;color:var(--text-secondary);margin-bottom:14px">Configure your Google Apps Script Web App URL to enable cloud data syncing.</p>
+        
+        <div class="fr">
+          <label>Google Apps Script Web App URL</label>
+          <input type="text" id="cfg-gas-url" placeholder="https://script.google.com/macros/s/.../exec" oninput="saveAdminConfig()">
+        </div>
+        <div class="fr">
+          <label>Authorization Token / Secret Token</label>
+          <input type="password" id="cfg-gas-token" placeholder="Default: admin123" oninput="saveAdminConfig()">
+        </div>
+        
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn bs sm" style="flex:1" onclick="checkBackendConnection()">🔄 Test Connection</button>
+        </div>
+      </div>
+
+      <div class="rc">
+        <h3>⚡ Database Operations</h3>
+        <p style="font-size:12px;color:var(--text-secondary);margin-bottom:14px">Synchronize your local workspace data with the Google Sheets database.</p>
+        
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.15);border-radius:8px;padding:12px">
+            <div style="font-weight:700;color:var(--color-blue);font-size:12.5px;margin-bottom:4px">📥 Pull Data from Sheets</div>
+            <p style="font-size:11px;color:var(--text-secondary);line-height:1.4">This will fetch all stores, users, and schedules from the Google Sheet and overwrite your current local workspace data.</p>
+            <button class="btn bg sm" style="margin-top:8px;width:100%" onclick="pullFromGoogleSheets()">Pull Now</button>
+          </div>
+          
+          <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.15);border-radius:8px;padding:12px">
+            <div style="font-weight:700;color:var(--color-green);font-size:12.5px;margin-bottom:4px">📤 Push Data to Sheets</div>
+            <p style="font-size:11px;color:var(--text-secondary);line-height:1.4">This will upload your current active local outlets list, employee teams, and weekly schedules to the Google Sheet, overwriting sheet tables.</p>
+            <button class="btn bp sm" style="margin-top:8px;width:100%" onclick="pushToGoogleSheets()">Push Now</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Instructions & Apps Script Column -->
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <div class="rc">
+        <h3>📋 Step-by-Step Setup Guide</h3>
+        <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;display:flex;flex-direction:column;gap:10px">
+          <div><b>1. Create a Google Spreadsheet:</b> Create a blank Google Sheet. Add 3 tabs (sheets) with these exact names:
+            <ul style="margin-left:20px;margin-top:4px">
+              <li><code>Store Master</code></li>
+              <li><code>User Master</code></li>
+              <li><code>PJP Schedule</code></li>
+            </ul>
+          </div>
+          <div><b>2. Open Apps Script:</b> In your Google Spreadsheet, click <b>Extensions</b> &gt; <b>Apps Script</b>.</div>
+          <div><b>3. Paste Code:</b> Delete any code inside the editor and paste the template script shown below. Save the project.</div>
+          <div><b>4. Deploy as Web App:</b> Click <b>Deploy</b> &gt; <b>New deployment</b>.
+            <ul style="margin-left:20px;margin-top:4px">
+              <li>Select type: <b>Web app</b></li>
+              <li>Execute as: <b>Me (your-email)</b></li>
+              <li>Who has access: <b>Anyone</b></li>
+            </ul>
+            <div style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); border-radius:6px; padding:8px; margin-top:6px; color:#f87171; font-size:11.5px; line-height:1.4;">
+              ⚠️ <b>CRITICAL:</b> You <b>MUST</b> select <b>"Anyone"</b> for access. If left as "Only myself" or "Anyone with Google account", connection will fail with a CORS error because Google redirects the API request to the accounts sign-in screen.
+            </div>
+            Click <b>Deploy</b>, authorize permissions, and copy the generated <b>Web app URL</b>.
+          </div>
+          <div><b>5. Connect:</b> Paste the Web App URL and Token (`admin123` by default) into the settings panel on the left, then click <b>Test Connection</b>.</div>
+        </div>
+      </div>
+
+      <div class="rc" style="display:flex;flex-direction:column;max-height:500px;overflow:hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h3>📄 Apps Script Template</h3>
+          <button class="btn bs sm" onclick="copyGASCode()" style="padding:4px 8px;font-size:11px">📋 Copy Code</button>
+        </div>
+        <textarea id="gas-code-textarea" readonly style="flex:1;background:var(--bg-primary);border:1px solid var(--border-color);color:var(--text-secondary);font-family:monospace;font-size:11px;padding:10px;border-radius:6px;resize:none;outline:none;line-height:1.4"></textarea>
+      </div>
     </div>
   </div>
 </div>
@@ -2617,7 +2733,7 @@ document.addEventListener('click',e=>{if(e.target.classList.contains('mo'))e.tar
 window.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.mo.open').forEach(m=>m.classList.remove('open'));});
 
 function showTab(t){
-  const TAB_ORDER = ['map', 'planner', 'outlets', 'team', 'sku', 'optimizer', 'import', 'report'];
+  const TAB_ORDER = ['map', 'planner', 'outlets', 'team', 'sku', 'optimizer', 'import', 'report', 'admin'];
   const idx = TAB_ORDER.indexOf(t);
 
   document.querySelectorAll('.tc').forEach(el=>el.classList.remove('active'));
@@ -2652,6 +2768,7 @@ function showTab(t){
   }
   if(t==='planner')renderPlanner();
   if(t==='report'){renderReport();}
+  if(t==='admin')initAdminPortal();
 }
 
 function toast(msg,type=''){
@@ -2663,6 +2780,70 @@ function toast(msg,type=''){
 // ══════════════════════════════════════════════════════════════
 //  ROUTE OPTIMIZER
 // ══════════════════════════════════════════════════════════════
+// Suggestions for Route Optimizer selected outlets
+function getROOutletSuggestion(code) {
+  const o = outlets.find(x => x['Outlet code'] === code);
+  if (!o || !o.Latitude || !o.Longitude) return null;
+
+  const currentEC = o['Execution Champion Name'];
+  if (!currentEC) return null;
+
+  let bestEC = null;
+  let minDistanceToOther = Infinity;
+  let minDistanceToOwn = Infinity;
+
+  const ecDistances = {};
+  outlets.forEach(other => {
+    if (other['Outlet code'] === code || !other.Latitude || !other.Longitude) return;
+    const ec = other['Execution Champion Name'];
+    if (!ec) return;
+
+    const d = haversine(o.Latitude, o.Longitude, other.Latitude, other.Longitude);
+    if (!ecDistances[ec] || d < ecDistances[ec]) {
+      ecDistances[ec] = d;
+    }
+  });
+
+  const ownDist = ecDistances[currentEC] !== undefined ? ecDistances[currentEC] : Infinity;
+  
+  Object.entries(ecDistances).forEach(([ec, dist]) => {
+    if (ec === currentEC) return;
+    if (dist < minDistanceToOther) {
+      minDistanceToOther = dist;
+      bestEC = ec;
+    }
+  });
+
+  if (bestEC && minDistanceToOther < ownDist && minDistanceToOther < 8.0) {
+    const saved = ownDist === Infinity ? 0 : ownDist - minDistanceToOther;
+    return {
+      toEc: bestEC,
+      fromEc: currentEC,
+      dist: minDistanceToOther,
+      saved: saved
+    };
+  }
+  return null;
+}
+
+function reassignROOutlet(code, newEc) {
+  const o = outlets.find(x => x['Outlet code'] === code);
+  if (o) {
+    const oldEc = o['Execution Champion Name'];
+    o['Execution Champion Name'] = newEc;
+    if (!team.ecs.find(x => x.name === newEc)) {
+      team.ecs.push({ name: newEc, role: 'ec', bm: o['BM Mapped'] || '' });
+    }
+    toast(`Outlet reassigned from ${oldEc} to ${newEc} ✓`, 'success');
+    roFilterOutlets();
+    if (roOptimized.includes(code)) {
+      runOptimizer();
+    }
+    renderReport();
+    renderImportSuggestions();
+  }
+}
+
 let roSelected = new Set();   // outlet codes selected
 let roOptimized = [];         // ordered outlet codes after optimization
 let roMapInst = null;         // leaflet map for optimizer tab
@@ -2691,16 +2872,19 @@ function roFilterOutlets(){
   cnt.textContent = roSelected.size ? `(${roSelected.size} selected)` : '';
   document.getElementById('ro-list').innerHTML = filtered.map(o=>{
     const sel = roSelected.has(o['Outlet code']);
-    return `<label style="display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid #f8fafc;cursor:pointer;background:${sel?'#eff6ff':'#fff'};transition:.1s" onmouseover="this.style.background='${sel?'#dbeafe':'#f0f7ff'}'" onmouseout="this.style.background='${sel?'#eff6ff':'#fff'}'">
-      <input type="checkbox" ${sel?'checked':''} value="${o['Outlet code']}" onchange="roToggle('${o['Outlet code']}',this.checked)" style="width:14px;height:14px;accent-color:#2563eb;flex-shrink:0;cursor:pointer">
+    const sug = getROOutletSuggestion(o['Outlet code']);
+    const sugHtml = sug ? `<div style="font-size:9.5px;color:var(--color-amber);margin-top:2px;font-weight:600">💡 Suggest: ${sug.toEc} (is nearer)</div>` : '';
+    return `<label style="display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid var(--border-color);cursor:pointer;background:${sel?'rgba(59,130,246,0.12)':'transparent'};transition:.1s" onmouseover="this.style.background='${sel?'rgba(59,130,246,0.2)':'var(--sidebar-hover)'}'" onmouseout="this.style.background='${sel?'rgba(59,130,246,0.12)':'transparent'}'">
+      <input type="checkbox" ${sel?'checked':''} value="${o['Outlet code']}" onchange="roToggle('${o['Outlet code']}',this.checked)" style="width:14px;height:14px;accent-color:var(--color-blue);flex-shrink:0;cursor:pointer">
       <div style="min-width:0;flex:1">
-        <div style="font-size:11px;font-weight:600;color:#1e40af;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o['Outlet code']}</div>
-        <div style="font-size:11px;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o['Outlet name']}</div>
-        <div style="font-size:10px;color:#9ca3af">${o.Beat} · ${o['Execution Champion Name']}</div>
+        <div style="font-size:11px;font-weight:600;color:var(--color-blue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o['Outlet code']}</div>
+        <div style="font-size:11px;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o['Outlet name']}</div>
+        <div style="font-size:10px;color:var(--text-secondary)">${o.Beat} · ${o['Execution Champion Name']}</div>
+        ${sugHtml}
       </div>
       <span style="font-size:9px;background:${beatCM[o.Beat]||'#888'}22;color:${beatCM[o.Beat]||'#888'};padding:2px 5px;border-radius:8px;white-space:nowrap">${o.Beat}</span>
     </label>`;
-  }).join('') || '<div style="padding:20px;text-align:center;color:#9ca3af;font-size:12px">No outlets found</div>';
+  }).join('') || '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px">No outlets found</div>';
 }
 
 function roToggle(code, checked){
@@ -2768,9 +2952,40 @@ function runOptimizer(){
   renderROMap();
 }
 
+function roReassignAllSelected() {
+  let count = 0;
+  roOptimized.forEach(c => {
+    const sug = getROOutletSuggestion(c);
+    if (sug) {
+      const o = outlets.find(x => x['Outlet code'] === c);
+      if (o) {
+        o['Execution Champion Name'] = sug.toEc;
+        if (!team.ecs.find(x => x.name === sug.toEc)) {
+          team.ecs.push({ name: sug.toEc, role: 'ec', bm: o['BM Mapped'] || '' });
+        }
+        count++;
+      }
+    }
+  });
+  if (count > 0) {
+    toast(`Reassigned ${count} outlets successfully ✓`, 'success');
+    roFilterOutlets();
+    runOptimizer();
+    renderReport();
+    renderImportSuggestions();
+  } else {
+    toast('No reassignment suggestions found among selected outlets', 'info');
+  }
+}
+
 function renderROResult(){
   const list = roOptimized;
-  if(!list.length){document.getElementById('ro-result').innerHTML='';return;}
+  if(!list.length){
+    document.getElementById('ro-result').innerHTML='';
+    const btn = document.getElementById('ro-reassign-all-btn');
+    if (btn) btn.style.display = 'none';
+    return;
+  }
   let total = 0;
   const pairs = [];
   for(let i=0;i<list.length-1;i++){
@@ -2781,20 +2996,36 @@ function renderROResult(){
   }
   const fmtD = d => d<1?(d*1000).toFixed(0)+'m':d.toFixed(2)+'km';
   document.getElementById('ro-summary').innerHTML =
-    `<span style="color:#16a34a;font-weight:700">${list.length} outlets</span> &nbsp;·&nbsp; <span style="color:#2563eb;font-weight:700">🛣 ${fmtD(total)} total</span> &nbsp;·&nbsp; 2-Opt TSP optimized`;
+    `<span style="color:#16a34a;font-weight:700">${list.length} outlets</span> &nbsp;·&nbsp; <span style="color:#2563eb;font-weight:700">🛣 ${fmtD(total)} total</span>`;
+  
+  const hasAnySuggestion = list.some(c => getROOutletSuggestion(c) !== null);
+  const reassignAllBtn = document.getElementById('ro-reassign-all-btn');
+  if (reassignAllBtn) {
+    reassignAllBtn.style.display = hasAnySuggestion ? 'inline-flex' : 'none';
+  }
+
   document.getElementById('ro-result').innerHTML = list.map((c,i)=>{
     const o=outlets.find(x=>x['Outlet code']===c);
     const distToNext = i<pairs.length ? pairs[i] : null;
+    const sug = getROOutletSuggestion(c);
+    const sugHtml = sug ? `
+      <div style="font-size:10px;color:var(--color-amber);background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);padding:4px 8px;border-radius:4px;margin-top:5px;display:flex;justify-content:space-between;align-items:center;width:100%">
+        <span>💡 Suggest: <b>${sug.toEc}</b> is nearer</span>
+        <button class="btn bw sm" onclick="reassignROOutlet('${c}', '${sug.toEc}')" style="padding:2px 6px;font-size:9.5px;height:22px">Transfer</button>
+      </div>` : '';
     return `<div style="display:flex;flex-direction:column">
-      <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 6px;background:${i%2===0?'#fff':'#f8fafc'};border-radius:6px;margin-bottom:2px">
-        <div style="width:22px;height:22px;border-radius:50%;background:#2563eb;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">${i+1}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:10px;color:#3b82f6;font-weight:600">${c}</div>
-          <div style="font-size:12px;color:#111827;font-weight:500;line-height:1.3;word-break:break-word">${o?o['Outlet name']:c}</div>
-          <div style="font-size:10px;color:#9ca3af;margin-top:2px">${o?o.Beat+' · '+o['Execution Champion Name']:''}</div>
+      <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 6px;background:${i%2===0?'var(--bg-card)':'rgba(18,40,71,0.5)'};border:1px solid var(--border-color);border-radius:6px;margin-bottom:2px;flex-direction:column">
+        <div style="display:flex;align-items:flex-start;gap:8px;width:100%">
+          <div style="width:22px;height:22px;border-radius:50%;background:var(--color-blue);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">${i+1}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:10px;color:var(--color-blue);font-weight:600">${c}</div>
+            <div style="font-size:12px;color:var(--text-primary);font-weight:500;line-height:1.3;word-break:break-word">${o?o['Outlet name']:c}</div>
+            <div style="font-size:10px;color:var(--text-secondary);margin-top:2px">${o?o.Beat+' · '+o['Execution Champion Name']:''}</div>
+          </div>
         </div>
+        ${sugHtml}
       </div>
-      ${distToNext!==null?`<div style="text-align:center;font-size:10px;color:#f59e0b;font-weight:600;padding:1px 0;user-select:none">↓ ${fmtD(distToNext)}</div>`:''}
+      ${distToNext!==null?`<div style="text-align:center;font-size:10px;color:var(--color-amber);font-weight:600;padding:1px 0;user-select:none">↓ ${fmtD(distToNext)}</div>`:''}
     </div>`;
   }).join('');
 }
@@ -2804,6 +3035,8 @@ function roClearMapLayers(){
   roMapLayers=[];
 }
 
+// Draw route polyline
+// Markers with stop numbers
 function renderROMap(){
   if(!roMapInst) roInit();
   roClearMapLayers();
@@ -2813,7 +3046,7 @@ function renderROMap(){
   if(pts.length<2) return;
   // Draw route polyline
   const latlngs = pts.map(o=>[o.Latitude,o.Longitude]);
-  const line = L.polyline(latlngs,{color:'#2563eb',weight:3,opacity:.8,dashArray:'6,4'}).addTo(roMapInst);
+  const line = L.polyline(latlngs,{color:'var(--color-blue)',weight:3,opacity:.8,dashArray:'6,4'}).addTo(roMapInst);
   roMapLayers.push(line);
   // Markers with stop numbers
   pts.forEach((o,i)=>{
@@ -2825,7 +3058,25 @@ function renderROMap(){
       iconSize:[22,22],iconAnchor:[11,11]
     });
     const m = L.marker([o.Latitude,o.Longitude],{icon}).addTo(roMapInst);
-    m.bindPopup(`<b>#${i+1} ${o['Outlet name']}</b><br><span style="font-size:11px;color:#6b7280">${o['Outlet code']} · ${o.Beat}</span>`);
+    
+    // Proximity Transfer Suggestion inside map popup
+    const sug = getROOutletSuggestion(o['Outlet code']);
+    let popupHtml = `<div style="font-size:13px;color:var(--text-primary);min-width:200px">
+      <b>#${i+1} ${o['Outlet name']}</b><hr style="margin:5px 0;border-color:var(--border-color)">
+      <table style="font-size:12px;color:var(--text-secondary)">
+        <tr><td style="padding-right:8px">Code</td><td><b>${o['Outlet code']}</b></td></tr>
+        <tr><td style="padding-right:8px">Beat</td><td>${o.Beat}</td></tr>
+        <tr><td style="padding-right:8px">EC</td><td>${o['Execution Champion Name']}</td></tr>
+      </table>`;
+    if (sug) {
+      popupHtml += `<div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--border-color);font-size:11px;color:var(--color-amber)">
+        💡 <b>Suggest:</b> Reassign to <b>${sug.toEc}</b> (closer by ${sug.saved > 0 ? sug.saved.toFixed(1) + ' km' : 'proximity'})
+        <button class="btn bp sm" onclick="reassignROOutlet('${o['Outlet code']}', '${sug.toEc}')" style="margin-top:6px;width:100%;padding:3px;font-size:10px;font-weight:700">👥 Transfer to ${sug.toEc}</button>
+      </div>`;
+    }
+    popupHtml += `</div>`;
+    
+    m.bindPopup(popupHtml);
     roMapLayers.push(m);
   });
   roMapInst.fitBounds(line.getBounds(),{padding:[30,30]});
@@ -3204,8 +3455,8 @@ function getReassignmentSuggestions() {
       
       // If the outlet is closer to the other EC's scheduled route than its current one
       if (minDistToOther < minDistToOwn && minDistToOther < 8.0) {
-        // Limit suggestion if the target EC already has maxed workload (8 visits)
-        if (otherScheduled.length < 8) {
+        // Limit suggestion if the target EC already has maxed workload (50 visits)
+        if (otherScheduled.length < 50) {
           suggestions.push({
             code: code,
             name: o['Outlet name'],
@@ -3288,7 +3539,7 @@ function getBulkReassignmentSuggestions() {
 
             // If outlet is closer to the other EC's route
             if (minDistToOther < minDistToOwn && minDistToOther < 8.0) {
-              if (otherRoute.codes.length < 8) {
+              if (otherRoute.codes.length < 50) {
                 // Compute new route for suggested EC including this outlet
                 const testCodes = [...otherRoute.codes, code];
                 const optimizedTest = optimizeRoute(testCodes, otherRoute.depot, mode);
@@ -3848,12 +4099,453 @@ function moveStop(key, index, direction) {
 }
 
 // Remove stop directly from preview modal list
+// Remove stop directly from preview modal list
 function removeStopFromPreview(key, code) {
   if (!confirm('Remove this outlet from today\'s schedule?')) return;
   pjp[key] = (pjp[key] || []).filter(c => c !== code);
   renderPreviewModalContent();
   renderPlanner();
 }
+
+// ══════════════════════════════════════════════════════════════
+//  ADMIN PORTAL & GOOGLE SHEET SYNC BACKEND
+// ══════════════════════════════════════════════════════════════
+let adminLoggedIn = false;
+
+const GAS_TEMPLATE_CODE = `// Google Apps Script code to deploy as Web App (executing as Me, with Access: Anyone)
+const SECRET_TOKEN = "admin123"; // Change this to your desired token
+
+function doGet(e) {
+  try {
+    const token = e.parameter.token;
+    if (token !== SECRET_TOKEN) {
+      return ContentService.createTextOutput(JSON.stringify({ success: false, error: "Unauthorized access: Invalid token" }))
+                            .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    
+    const sheetStore = ss.getSheetByName("Store Master") || createStoreMasterSheet(ss);
+    const storeData = getSheetRowsAsJSON(sheetStore);
+    
+    const sheetUser = ss.getSheetByName("User Master") || createUserMasterSheet(ss);
+    const userData = getSheetRowsAsJSON(sheetUser);
+    
+    const sheetPjp = ss.getSheetByName("PJP Schedule") || createPJPScheduleSheet(ss);
+    const pjpData = getSheetRowsAsJSON(sheetPjp);
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      outlets: storeData,
+      users: userData,
+      pjp: pjpData
+    })).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ success: false, error: err.toString() }))
+                          .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doPost(e) {
+  try {
+    let token = e.parameter.token;
+    let payload = null;
+    
+    if (e.postData && e.postData.contents) {
+      payload = JSON.parse(e.postData.contents);
+      if (!token && payload.token) {
+        token = payload.token;
+      }
+    }
+    
+    if (token !== SECRET_TOKEN) {
+      return ContentService.createTextOutput(JSON.stringify({ success: false, error: "Unauthorized access: Invalid token" }))
+                            .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    if (!payload) {
+      return ContentService.createTextOutput(JSON.stringify({ success: false, error: "Empty payload received" }))
+                            .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    
+    if (payload.outlets) {
+      const sheetStore = ss.getSheetByName("Store Master") || createStoreMasterSheet(ss);
+      saveStoreMaster(sheetStore, payload.outlets);
+    }
+    
+    if (payload.team) {
+      const sheetUser = ss.getSheetByName("User Master") || createUserMasterSheet(ss);
+      saveUserMaster(sheetUser, payload.team);
+    }
+    
+    if (payload.pjp) {
+      const sheetPjp = ss.getSheetByName("PJP Schedule") || createPJPScheduleSheet(ss);
+      savePJPSchedule(sheetPjp, payload.pjp);
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify({ success: true }))
+                          .setMimeType(ContentService.MimeType.JSON);
+                          
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ success: false, error: err.toString() }))
+                          .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function getSheetRowsAsJSON(sheet) {
+  const range = sheet.getDataRange();
+  const values = range.getValues();
+  if (values.length <= 1) return [];
+  
+  const headers = values[0].map(h => String(h).trim());
+  const rows = [];
+  
+  for (let r = 1; r < values.length; r++) {
+    const row = {};
+    let hasData = false;
+    for (let c = 0; c < headers.length; c++) {
+      row[headers[c]] = values[r][c];
+      if (values[r][c] !== "" && values[r][c] !== null) {
+        hasData = true;
+      }
+    }
+    if (hasData) {
+      rows.push(row);
+    }
+  }
+  return rows;
+}
+
+function saveStoreMaster(sheet, outlets) {
+  sheet.clear();
+  const headers = ["Outlet Code", "Outlet Name", "Latitude", "Longitude", "Beat", "BM Mapped", "Execution Champion Name", "Depot"];
+  sheet.appendRow(headers);
+  
+  const rows = outlets.map(o => [
+    o["Outlet code"] || "",
+    o["Outlet name"] || "",
+    o.Latitude || "",
+    o.Longitude || "",
+    o.Beat || "",
+    o["BM Mapped"] || "",
+    o["Execution Champion Name"] || "",
+    o.Depot || ""
+  ]);
+  
+  if (rows.length > 0) {
+    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+  }
+  
+  sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold").setBackground("#d9ead3");
+  sheet.autoResizeColumns(1, headers.length);
+}
+
+function saveUserMaster(sheet, team) {
+  sheet.clear();
+  const headers = ["Name", "Role", "BM Mapped"];
+  sheet.appendRow(headers);
+  
+  const rows = [];
+  if (team.bms) {
+    team.bms.forEach(bm => {
+      rows.push([bm.name, "BM", ""]);
+    });
+  }
+  if (team.ecs) {
+    team.ecs.forEach(ec => {
+      rows.push([ec.name, "EC", ec.bm || ""]);
+    });
+  }
+  
+  if (rows.length > 0) {
+    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+  }
+  
+  sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold").setBackground("#c9daf8");
+  sheet.autoResizeColumns(1, headers.length);
+}
+
+function savePJPSchedule(sheet, pjp) {
+  sheet.clear();
+  const headers = ["Week", "EC Name", "BM Name", "Day", "Visit Order", "Outlet Code", "Outlet Name", "Beat"];
+  sheet.appendRow(headers);
+  
+  const rows = [];
+  Object.entries(pjp).forEach(([key, codes]) => {
+    if (!codes || codes.length === 0) return;
+    const parts = key.split("__");
+    if (parts.length < 3) return;
+    const wk = parts[0];
+    const ecEncoded = parts[1];
+    const day = parts[2];
+    const ecName = decodeURIComponent(ecEncoded.replace(/_/g, " "));
+    
+    codes.forEach((code, index) => {
+      rows.push([
+        wk,
+        ecName,
+        "", 
+        day,
+        index + 1,
+        code,
+        "",
+        ""
+      ]);
+    });
+  });
+  
+  if (rows.length > 0) {
+    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+  }
+  
+  sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold").setBackground("#fce5cd");
+  sheet.autoResizeColumns(1, headers.length);
+}
+
+function createStoreMasterSheet(ss) { return ss.insertSheet("Store Master"); }
+function createUserMasterSheet(ss) { return ss.insertSheet("User Master"); }
+function createPJPScheduleSheet(ss) { return ss.insertSheet("PJP Schedule"); }`;
+
+function initAdminPortal() {
+  const txt = document.getElementById('gas-code-textarea');
+  if (txt) txt.value = GAS_TEMPLATE_CODE;
+  
+  loadAdminConfig();
+  
+  const loginView = document.getElementById('admin-login-view');
+  const dashView = document.getElementById('admin-dashboard-view');
+  const topbarActs = document.getElementById('admin-topbar-actions');
+  
+  if (adminLoggedIn) {
+    loginView.style.display = 'none';
+    dashView.style.display = 'grid';
+    topbarActs.style.display = 'flex';
+  } else {
+    loginView.style.display = 'flex';
+    dashView.style.display = 'none';
+    topbarActs.style.display = 'none';
+  }
+}
+
+function adminLogin() {
+  const pw = document.getElementById('admin-pw').value;
+  const errorEl = document.getElementById('admin-login-error');
+  if (pw === 'admin123') {
+    adminLoggedIn = true;
+    errorEl.style.display = 'none';
+    document.getElementById('admin-pw').value = '';
+    initAdminPortal();
+    toast('Logged in successfully ✓', 'success');
+  } else {
+    errorEl.style.display = 'block';
+  }
+}
+
+function adminLogout() {
+  adminLoggedIn = false;
+  initAdminPortal();
+  toast('Logged out successfully');
+}
+
+function saveAdminConfig() {
+  const url = document.getElementById('cfg-gas-url').value.trim();
+  const token = document.getElementById('cfg-gas-token').value.trim();
+  localStorage.setItem('cfg_gas_url', url);
+  localStorage.setItem('cfg_gas_token', token);
+  updateConnectionBadge('Not Configured', 'var(--text-muted)');
+}
+
+function loadAdminConfig() {
+  const url = localStorage.getItem('cfg_gas_url') || '';
+  const token = localStorage.getItem('cfg_gas_token') || '';
+  const urlInput = document.getElementById('cfg-gas-url');
+  const tokenInput = document.getElementById('cfg-gas-token');
+  if (urlInput) urlInput.value = url;
+  if (tokenInput) tokenInput.value = token;
+}
+
+function updateConnectionBadge(text, color) {
+  const badge = document.getElementById('admin-conn-badge');
+  if (!badge) return;
+  badge.textContent = text;
+  badge.style.color = color;
+  badge.style.borderColor = color + '44';
+  badge.style.background = color + '15';
+}
+
+function checkBackendConnection() {
+  const url = localStorage.getItem('cfg_gas_url');
+  const token = localStorage.getItem('cfg_gas_token') || 'admin123';
+  if (!url) {
+    toast('Please configure Google Apps Script URL first', 'error');
+    updateConnectionBadge('Not Configured', 'var(--text-muted)');
+    return;
+  }
+  
+  updateConnectionBadge('Connecting...', 'var(--color-amber)');
+  const pingUrl = url + (url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token);
+  
+  fetch(pingUrl)
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.success) {
+        updateConnectionBadge('Connected ✓', 'var(--color-green)');
+        toast('Connection successful ✓', 'success');
+      } else {
+        updateConnectionBadge('Auth Failed ✕', 'var(--color-red)');
+        toast('Authentication failed: ' + (data ? data.error : 'Unknown error'), 'error');
+      }
+    })
+    .catch(err => {
+      updateConnectionBadge('Connection Failed ✕', 'var(--color-red)');
+      toast('Connection failed. Please check Web App URL and deployment.', 'error');
+      console.error(err);
+    });
+}
+
+function pullFromGoogleSheets() {
+  const url = localStorage.getItem('cfg_gas_url');
+  const token = localStorage.getItem('cfg_gas_token') || 'admin123';
+  if (!url) return toast('Please configure Google Apps Script URL first', 'error');
+  
+  updateConnectionBadge('Pulling...', 'var(--color-amber)');
+  const pullUrl = url + (url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token);
+  
+  fetch(pullUrl)
+    .then(r => r.json())
+    .then(data => {
+      if (!data || !data.success) {
+        updateConnectionBadge('Pull Failed ✕', 'var(--color-red)');
+        return toast('Pull failed: ' + (data ? data.error : 'Invalid response'), 'error');
+      }
+      
+      if (data.outlets && data.outlets.length > 0) {
+        outlets = data.outlets.map(o => ({
+          "Outlet code": String(o["Outlet Code"] || "").trim(),
+          "Outlet name": String(o["Outlet Name"] || "").trim(),
+          "Latitude": parseFloat(o["Latitude"]) || 0,
+          "Longitude": parseFloat(o["Longitude"]) || 0,
+          "Beat": String(o["Beat"] || "").trim(),
+          "BM Mapped": String(o["BM Mapped"] || "").trim(),
+          "Execution Champion Name": String(o["Execution Champion Name"] || "").trim(),
+          "Depot": String(o["Depot"] || "").trim()
+        }));
+        localStorage.setItem('outlets', JSON.stringify(outlets));
+      }
+      
+      if (data.users && data.users.length > 0) {
+        team = { bms: [], ecs: [] };
+        data.users.forEach(u => {
+          const role = String(u["Role"] || "").trim().toUpperCase();
+          const name = String(u["Name"] || "").trim();
+          const bm = String(u["BM Mapped"] || "").trim();
+          if (role === "BM") {
+            team.bms.push({ name, role: 'bm' });
+          } else if (role === "EC") {
+            team.ecs.push({ name, role: 'ec', bm });
+          }
+        });
+        localStorage.setItem('team', JSON.stringify(team));
+      }
+      
+      if (data.pjp) {
+        const newPjp = {};
+        const sortedPjp = data.pjp.slice().sort((a, b) => {
+          if (a["Week"] !== b["Week"]) return String(a["Week"]).localeCompare(String(b["Week"]));
+          if (a["EC Name"] !== b["EC Name"]) return String(a["EC Name"]).localeCompare(String(b["EC Name"]));
+          if (a["Day"] !== b["Day"]) return String(a["Day"]).localeCompare(String(b["Day"]));
+          return (parseInt(a["Visit Order"]) || 0) - (parseInt(b["Visit Order"]) || 0);
+        });
+        
+        sortedPjp.forEach(row => {
+          const wk = String(row["Week"] || "").trim();
+          const ecName = String(row["EC Name"] || "").trim();
+          const day = String(row["Day"] || "").trim();
+          const code = String(row["Outlet Code"] || "").trim();
+          if (!wk || !ecName || !day || !code) return;
+          
+          const key = `${wk}__${encodeKey(ecName)}__${day}`;
+          if (!newPjp[key]) newPjp[key] = [];
+          if (!newPjp[key].includes(code)) {
+            newPjp[key].push(code);
+          }
+        });
+        pjp = newPjp;
+        localStorage.setItem('pjp', JSON.stringify(pjp));
+      }
+      
+      buildBeatColors();
+      initMap();
+      populateSelects();
+      renderOT();
+      renderSKUT();
+      renderTeam();
+      renderReport();
+      renderImportSuggestions();
+      document.getElementById('total-count').textContent = outlets.length;
+      
+      updateConnectionBadge('Connected ✓', 'var(--color-green)');
+      toast('Data pulled & updated successfully ✓', 'success');
+    })
+    .catch(err => {
+      updateConnectionBadge('Pull Failed ✕', 'var(--color-red)');
+      toast('Data fetch failed. Check network or script.', 'error');
+      console.error(err);
+    });
+}
+
+function pushToGoogleSheets() {
+  const url = localStorage.getItem('cfg_gas_url');
+  const token = localStorage.getItem('cfg_gas_token') || 'admin123';
+  if (!url) return toast('Please configure Google Apps Script URL first', 'error');
+  
+  updateConnectionBadge('Pushing...', 'var(--color-amber)');
+  const pushUrl = url + (url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token);
+  
+  const payload = {
+    token: token,
+    outlets: outlets,
+    team: team,
+    pjp: pjp
+  };
+  
+  fetch(pushUrl, {
+    method: 'POST',
+    mode: 'cors',
+    headers: {
+      'Content-Type': 'text/plain'
+    },
+    body: JSON.stringify(payload)
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data && data.success) {
+      updateConnectionBadge('Connected ✓', 'var(--color-green)');
+      toast('Data saved to Google Sheets successfully ✓', 'success');
+    } else {
+      updateConnectionBadge('Push Failed ✕', 'var(--color-red)');
+      toast('Save failed: ' + (data ? data.error : 'Unknown error'), 'error');
+    }
+  })
+  .catch(err => {
+    updateConnectionBadge('Push Failed ✕', 'var(--color-red)');
+    toast('Data push failed. Check network or URL.', 'error');
+    console.error(err);
+  });
+}
+
+function copyGASCode() {
+  const copyText = document.getElementById("gas-code-textarea");
+  copyText.select();
+  copyText.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(copyText.value)
+    .then(() => toast('Template code copied to clipboard ✓', 'success'))
+    .catch(() => toast('Copy failed', 'error'));
+}
+
 
 init();
 </script>
